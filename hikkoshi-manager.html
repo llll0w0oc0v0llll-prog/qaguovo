@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>引越し管理 — 箱番号とスケジュール</title>
+<style>
+:root{
+  --bg:#F2EDE2;
+  --card:#FFFDF7;
+  --kraft:#D9BE93;
+  --kraft-deep:#A87F4C;
+  --ink:#2A241A;
+  --muted:#82755F;
+  --line:#E4D9C4;
+  --tape:#2B66B8;
+  --tape-soft:#E3ECFA;
+  --danger:#B3402F;
+  --danger-soft:#F7E3DF;
+  --ok:#3B7D4F;
+  --ok-soft:#E2EFE6;
+  --warn:#9C6A12;
+  --warn-soft:#F6EBD4;
+  --radius:12px;
+  --shadow:0 1px 3px rgba(58,45,25,.12), 0 4px 14px rgba(58,45,25,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic UI","Noto Sans JP",Meiryo,sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  line-height:1.6;
+  min-height:100vh;
+}
+button{font-family:inherit;cursor:pointer}
+input,textarea,select{font-family:inherit;font-size:16px;color:var(--ink)}
+
+/* ===== header ===== */
+header{
+  background:var(--card);
+  border-bottom:2px solid var(--kraft);
+  padding:12px 16px 0;
+  position:sticky;top:0;z-index:20;
+}
+.head-row{display:flex;align-items:center;justify-content:space-between;gap:8px;max-width:860px;margin:0 auto}
+.app-title{font-size:17px;font-weight:800;letter-spacing:.02em;display:flex;align-items:center;gap:8px}
+.app-title .mark{
+  display:inline-block;width:26px;height:22px;border:2.5px solid var(--kraft-deep);
+  border-radius:3px;position:relative;background:var(--kraft);
+}
+.app-title .mark::after{content:"";position:absolute;left:50%;top:-2px;bottom:-2px;width:6px;transform:translateX(-50%);background:var(--tape);opacity:.85;border-radius:1px}
+.head-btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.ghost-btn{
+  background:none;border:1.5px solid var(--line);border-radius:8px;
+  padding:5px 10px;font-size:12.5px;font-weight:600;color:var(--muted);
+}
+.ghost-btn:hover{border-color:var(--kraft-deep);color:var(--ink)}
+.tabs{display:flex;gap:4px;max-width:860px;margin:10px auto 0}
+.tab{
+  flex:1;border:none;background:none;padding:10px 4px 12px;font-size:14.5px;font-weight:700;
+  color:var(--muted);border-bottom:3px solid transparent;
+}
+.tab.active{color:var(--ink);border-bottom-color:var(--tape)}
+
+main{max-width:860px;margin:0 auto;padding:16px 14px 90px}
+.view{display:none}
+.view.active{display:block}
+
+/* ===== boxes toolbar ===== */
+.toolbar{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+.search-row{display:flex;gap:8px}
+.search-box{
+  flex:1;display:flex;align-items:center;gap:8px;background:var(--card);
+  border:1.5px solid var(--line);border-radius:10px;padding:8px 12px;
+}
+.search-box svg{flex:none;opacity:.5}
+.search-box input{border:none;outline:none;background:none;width:100%}
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.filter-row select{
+  background:var(--card);border:1.5px solid var(--line);border-radius:8px;padding:6px 8px;font-size:13.5px;
+}
+.chk-pill{
+  display:flex;align-items:center;gap:6px;font-size:13.5px;font-weight:600;color:var(--muted);
+  background:var(--card);border:1.5px solid var(--line);border-radius:999px;padding:6px 12px;user-select:none;cursor:pointer;
+}
+.chk-pill input{accent-color:var(--tape)}
+.stats{margin-left:auto;font-size:12.5px;color:var(--muted);font-weight:600}
+
+/* ===== box cards ===== */
+.box-list{display:grid;grid-template-columns:1fr;gap:12px}
+@media(min-width:640px){.box-list{grid-template-columns:1fr 1fr}}
+.box-card{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:14px 14px 12px;position:relative;overflow:hidden;
+}
+.box-card::before{ /* packing tape strip */
+  content:"";position:absolute;top:0;left:18px;width:52px;height:8px;
+  background:var(--tape);opacity:.28;border-radius:0 0 3px 3px;
+}
+.box-card.opened{opacity:.62;background:#F6F2E8}
+.box-card-top{display:flex;align-items:flex-start;gap:12px}
+.numtag{ /* 荷札 */
+  flex:none;background:var(--kraft);border:1.5px solid var(--kraft-deep);
+  border-radius:6px;padding:6px 14px 6px 22px;position:relative;transform:rotate(-2deg);
+  box-shadow:0 1px 2px rgba(58,45,25,.2);
+}
+.numtag::before{ /* tag hole */
+  content:"";position:absolute;left:8px;top:50%;transform:translateY(-50%);
+  width:7px;height:7px;border-radius:50%;background:var(--bg);border:1.5px solid var(--kraft-deep);
+}
+.numtag .n{font-size:26px;font-weight:800;line-height:1;letter-spacing:.02em}
+.numtag .l{font-size:9px;font-weight:700;color:#6E5327;letter-spacing:.12em;display:block;margin-bottom:1px}
+.box-head-info{flex:1;min-width:0}
+.tag-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:4px}
+.tag{font-size:11px;font-weight:700;border-radius:5px;padding:2px 7px;white-space:nowrap}
+.tag.room{background:var(--tape-soft);color:var(--tape)}
+.tag.pri-first{background:var(--warn-soft);color:var(--warn)}
+.tag.pri-later{background:#EEEAE0;color:var(--muted)}
+.tag.fragile{background:var(--danger-soft);color:var(--danger)}
+.tag.opened-tag{background:var(--ok-soft);color:var(--ok)}
+.box-memo{font-size:12.5px;color:var(--muted);overflow-wrap:break-word}
+.items-wrap{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+.item-chip{
+  font-size:12.5px;background:#F4EEDF;border:1px solid var(--line);
+  border-radius:6px;padding:2px 8px;
+}
+.item-chip mark{background:#FFE58A;border-radius:2px;padding:0 1px}
+.photo-strip{display:flex;gap:6px;margin-top:10px;overflow-x:auto;padding-bottom:2px}
+.photo-strip img{
+  width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--line);
+  flex:none;cursor:pointer;
+}
+.card-actions{display:flex;gap:6px;margin-top:12px;border-top:1px dashed var(--line);padding-top:10px}
+.mini-btn{
+  border:1.5px solid var(--line);background:none;border-radius:8px;
+  padding:5px 10px;font-size:12.5px;font-weight:700;color:var(--muted);
+}
+.mini-btn:hover{border-color:var(--kraft-deep);color:var(--ink)}
+.mini-btn.open-toggle{margin-left:auto;border-color:var(--ok);color:var(--ok)}
+.box-card.opened .mini-btn.open-toggle{border-color:var(--line);color:var(--muted)}
+.empty-note{
+  text-align:center;color:var(--muted);font-size:14px;padding:48px 20px;
+  border:2px dashed var(--line);border-radius:var(--radius);background:rgba(255,253,247,.5);
+}
+.empty-note b{display:block;font-size:15px;color:var(--ink);margin-bottom:6px}
+
+/* FAB */
+.fab{
+  position:fixed;right:18px;bottom:20px;z-index:30;
+  background:var(--tape);color:#fff;border:none;border-radius:999px;
+  padding:14px 22px;font-size:15px;font-weight:800;box-shadow:0 4px 14px rgba(43,102,184,.4);
+  display:flex;align-items:center;gap:8px;
+}
+.fab span.plus{font-size:20px;line-height:1}
+.fab:active{transform:scale(.97)}
+
+/* ===== dialog ===== */
+dialog{
+  border:none;border-radius:16px;padding:0;width:min(560px, calc(100vw - 24px));
+  max-height:calc(100dvh - 40px);box-shadow:0 10px 40px rgba(40,30,15,.35);
+}
+dialog::backdrop{background:rgba(42,36,26,.45)}
+.dlg-inner{padding:18px 18px 16px;overflow-y:auto;max-height:calc(100dvh - 40px)}
+.dlg-title{font-size:16px;font-weight:800;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+.dlg-close{border:none;background:none;font-size:22px;color:var(--muted);line-height:1;padding:4px}
+.f-row{margin-bottom:13px}
+.f-row label{display:block;font-size:12.5px;font-weight:700;color:var(--muted);margin-bottom:4px}
+.f-row input[type=text],.f-row input[type=number],.f-row select,.f-row textarea{
+  width:100%;border:1.5px solid var(--line);border-radius:9px;padding:9px 11px;background:#fff;
+}
+.f-row textarea{min-height:96px;resize:vertical}
+.f-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.f-check{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600}
+.f-check input{width:18px;height:18px;accent-color:var(--danger)}
+.photo-edit{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.photo-edit .ph{position:relative}
+.photo-edit img{width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
+.photo-edit .rm{
+  position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;
+  background:var(--danger);color:#fff;border:2px solid #fff;font-size:12px;line-height:1;font-weight:800;
+}
+.photo-add-btn{
+  width:72px;height:72px;border:2px dashed var(--kraft-deep);border-radius:8px;background:none;
+  color:var(--kraft-deep);font-size:24px;font-weight:700;
+}
+.hint{font-size:11.5px;color:var(--muted);margin-top:4px}
+.dlg-actions{display:flex;gap:10px;margin-top:18px}
+.primary-btn{
+  flex:1;background:var(--tape);color:#fff;border:none;border-radius:10px;
+  padding:12px;font-size:15px;font-weight:800;
+}
+.secondary-btn{
+  background:none;border:1.5px solid var(--line);border-radius:10px;
+  padding:12px 16px;font-size:14px;font-weight:700;color:var(--muted);
+}
+#photoDialog{background:transparent;box-shadow:none;width:auto;max-width:calc(100vw - 20px)}
+#photoDialog img{max-width:100%;max-height:calc(100dvh - 60px);border-radius:10px;display:block}
+
+/* ===== schedule ===== */
+.sched-top{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:14px;margin-bottom:16px;
+}
+.sched-top-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.sched-top label{font-size:13px;font-weight:700;color:var(--muted)}
+.sched-top input[type=date]{
+  border:1.5px solid var(--line);border-radius:8px;padding:7px 10px;background:#fff;font-size:15px;
+}
+.countdown{font-size:13.5px;font-weight:700;margin-left:auto}
+.countdown b{font-size:20px;color:var(--tape)}
+.total-bar{height:10px;background:#EAE2D0;border-radius:99px;margin-top:12px;overflow:hidden}
+.total-bar i{display:block;height:100%;background:var(--tape);border-radius:99px;width:0;transition:width .3s}
+.total-label{font-size:12px;color:var(--muted);font-weight:600;margin-top:5px;text-align:right}
+
+.sgroup{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);margin-bottom:14px;overflow:hidden;
+}
+.sgroup-head{
+  width:100%;display:flex;align-items:center;gap:10px;padding:13px 14px;
+  background:none;border:none;text-align:left;
+}
+.sg-when{
+  flex:none;font-size:11px;font-weight:800;color:var(--tape);background:var(--tape-soft);
+  border-radius:6px;padding:3px 8px;letter-spacing:.03em;white-space:nowrap;
+}
+.sg-when.urgent{color:var(--danger);background:var(--danger-soft)}
+.sg-title{font-size:15px;font-weight:800;flex:1;min-width:0}
+.sg-dates{font-size:11.5px;color:var(--muted);font-weight:600;display:block}
+.sg-count{font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap}
+.sg-count.done{color:var(--ok)}
+.sg-arrow{flex:none;transition:transform .2s;color:var(--muted)}
+.sgroup.collapsed .sg-arrow{transform:rotate(-90deg)}
+.sgroup.collapsed .sg-body{display:none}
+.sg-body{border-top:1px solid var(--line);padding:4px 6px 8px}
+.task{
+  display:flex;align-items:flex-start;gap:10px;padding:9px 8px;border-radius:8px;
+}
+.task:hover{background:#F8F4EA}
+.task input{width:19px;height:19px;flex:none;margin-top:3px;accent-color:var(--ok)}
+.task .tx{flex:1;font-size:14px}
+.task .tx small{display:block;font-size:12px;color:var(--muted);line-height:1.5}
+.task.done .tx{color:var(--muted);text-decoration:line-through;text-decoration-color:rgba(130,117,95,.6)}
+.task.done .tx small{text-decoration:none}
+.task .del-task{border:none;background:none;color:var(--muted);font-size:15px;padding:2px 6px;visibility:hidden}
+.task:hover .del-task{visibility:visible}
+.add-task{display:flex;gap:8px;padding:6px 8px 4px}
+.add-task input{
+  flex:1;border:1.5px dashed var(--line);border-radius:8px;padding:7px 10px;background:none;font-size:13.5px;
+}
+.add-task button{
+  border:1.5px solid var(--line);background:none;border-radius:8px;padding:0 12px;
+  font-size:13px;font-weight:700;color:var(--muted);
+}
+.backup-note{
+  font-size:12.5px;color:var(--muted);background:var(--warn-soft);border:1px solid #E8D6AC;
+  border-radius:10px;padding:10px 12px;margin-top:20px;line-height:1.7;
+}
+.toast{
+  position:fixed;left:50%;bottom:84px;transform:translateX(-50%) translateY(20px);
+  background:var(--ink);color:#fff;font-size:13.5px;font-weight:600;border-radius:10px;
+  padding:10px 18px;opacity:0;pointer-events:none;transition:all .25s;z-index:60;white-space:nowrap;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ===== print: schedule as a checklist sheet ===== */
+@media print{
+  body{background:#fff}
+  header,.fab,.sched-top input,.add-task,.del-task,.backup-note,#view-boxes{display:none !important}
+  .view{display:block !important}
+  #view-boxes{display:none !important}
+  main{padding:0;max-width:none}
+  .sgroup{box-shadow:none;break-inside:avoid}
+  .sgroup.collapsed .sg-body{display:block}
+  .sg-arrow{display:none}
+}
+@media(max-width:480px){
+  .app-title{font-size:15px}
+  .stats{width:100%;margin-left:0;text-align:right}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="head-row">
+    <div class="app-title"><span class="mark"></span>引越し管理</div>
+    <div class="head-btns">
+      <button class="ghost-btn" id="btnQuickSave" hidden>💾 上書き保存</button>
+      <button class="ghost-btn" id="btnShare" hidden>📤 共有</button>
+      <button class="ghost-btn" id="btnExport">書き出し</button>
+      <button class="ghost-btn" id="btnImport">読み込み</button>
+    </div>
+  </div>
+  <nav class="tabs">
+    <button class="tab active" data-view="boxes" id="tabBoxes">📦 段ボール</button>
+    <button class="tab" data-view="schedule" id="tabSchedule">🗓 スケジュール</button>
+  </nav>
+</header>
+
+<main>
+  <!-- ============ boxes ============ -->
+  <section class="view active" id="view-boxes">
+    <div class="toolbar">
+      <div class="search-row">
+        <div class="search-box">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <input type="search" id="searchInput" placeholder="品目・箱番号・部屋・メモで検索">
+        </div>
+      </div>
+      <div class="filter-row">
+        <select id="roomFilter"><option value="">全ての部屋</option></select>
+        <label class="chk-pill"><input type="checkbox" id="unopenedOnly">未開封のみ</label>
+        <div class="stats" id="boxStats"></div>
+      </div>
+    </div>
+    <div class="box-list" id="boxList"></div>
+    <div class="empty-note" id="emptyNote" hidden>
+      <b>まだ箱が登録されていません</b>
+      右下の「箱を追加」から始めましょう。<br>
+      箱を閉じる直前に、番号を書いた紙を入れて中身を1枚撮影 → ここに登録するだけ。
+    </div>
+  </section>
+
+  <!-- ============ schedule ============ -->
+  <section class="view" id="view-schedule">
+    <div class="sched-top">
+      <div class="sched-top-row">
+        <label for="moveDate">引越し日</label>
+        <input type="date" id="moveDate">
+        <div class="countdown" id="countdown"></div>
+      </div>
+      <div class="total-bar"><i id="totalBarFill"></i></div>
+      <div class="total-label" id="totalLabel"></div>
+    </div>
+    <div id="schedGroups"></div>
+    <div class="backup-note">
+      💾 <b>データの保管方法</b>：データはこの端末のブラウザ内に保存されます（メイン）。バックアップは次の3通り。<br>
+      ① <b>PC</b>：「上書き保存」で保存先を一度選ぶと、以後ワンクリックで同じファイルに保存されます。<b>保存先をGoogle DriveやiCloudの同期フォルダにしておけば、保存のたび自動でクラウドにも上がります</b>（Chrome/Edge対応）。<br>
+      ② <b>スマホ</b>：「共有」から2タップでDrive・Gmail・LINE等のアプリへ直接送れます。<br>
+      ③ どの環境でも「書き出し」でJSONをダウンロード可能。別端末では「読み込み」で復元します。変更が10件たまると通知でお知らせします。ブラウザの印刷機能でスケジュールを紙のチェックリストとして出力できます。
+    </div>
+  </section>
+</main>
+
+<button class="fab" id="fabAdd"><span class="plus">＋</span>箱を追加</button>
+
+<!-- box add/edit dialog -->
+<dialog id="boxDialog">
+  <div class="dlg-inner">
+    <div class="dlg-title"><span id="dlgTitle">箱を追加</span><button class="dlg-close" id="dlgClose" aria-label="閉じる">×</button></div>
+    <div class="f-grid">
+      <div class="f-row">
+        <label for="fNum">箱番号</label>
+        <input type="number" id="fNum" min="1" inputmode="numeric">
+      </div>
+      <div class="f-row">
+        <label for="fRoom">部屋・置き場所</label>
+        <input type="text" id="fRoom" list="roomList" placeholder="例: キッチン">
+        <datalist id="roomList"></datalist>
+      </div>
+    </div>
+    <div class="f-grid">
+      <div class="f-row">
+        <label for="fPri">開封優先度</label>
+        <select id="fPri">
+          <option value="first">すぐ開ける</option>
+          <option value="normal" selected>通常</option>
+          <option value="later">後回しOK</option>
+        </select>
+      </div>
+      <div class="f-row" style="display:flex;align-items:flex-end;padding-bottom:9px">
+        <label class="f-check" style="margin:0"><input type="checkbox" id="fFragile">割れ物・精密品</label>
+      </div>
+    </div>
+    <div class="f-row">
+      <label for="fItems">中身（1行に1品目）</label>
+      <textarea id="fItems" placeholder="炊飯器&#10;延長コード&#10;お玉・フライ返し"></textarea>
+      <div class="hint">細かく書かなくてOK。写真と併用が前提です。</div>
+    </div>
+    <div class="f-row">
+      <label>封止前写真</label>
+      <div class="photo-edit" id="photoEdit"></div>
+      <input type="file" id="fPhotos" accept="image/*" multiple hidden>
+      <div class="hint">箱を閉じる直前に真上から1枚。自動で縮小保存されます。</div>
+    </div>
+    <div class="f-row">
+      <label for="fMemo">メモ</label>
+      <input type="text" id="fMemo" placeholder="例: 上積み厳禁 / 冬物なので後回し">
+    </div>
+    <div class="dlg-actions">
+      <button class="secondary-btn" id="btnCancel">キャンセル</button>
+      <button class="primary-btn" id="btnSave">保存する</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="photoDialog"><img id="photoBig" alt="箱の中身写真"></dialog>
+<input type="file" id="importFile" accept="application/json,.json" hidden>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ================= storage ================= */
+const LS_KEY = "hikkoshi-v1";
+let db = null;
+
+function openDB(){
+  return new Promise((res, rej) => {
+    const r = indexedDB.open("hikkoshi-db", 2);
+    r.onupgradeneeded = e => {
+      const d = e.target.result;
+      if (!d.objectStoreNames.contains("boxes")) d.createObjectStore("boxes", { keyPath: "id" });
+      if (!d.objectStoreNames.contains("meta")) d.createObjectStore("meta");
+    };
+    r.onsuccess = e => { db = e.target.result; res(); };
+    r.onerror = () => rej(r.error);
+  });
+}
+function store(mode){ return db.transaction("boxes", mode).objectStore("boxes"); }
+function dbGetAll(){ return new Promise((res, rej) => { const q = store("readonly").getAll(); q.onsuccess = () => res(q.result || []); q.onerror = () => rej(q.error); }); }
+function dbPut(box){ return new Promise((res, rej) => { const q = store("readwrite").put(box); q.onsuccess = res; q.onerror = () => rej(q.error); }); }
+function dbDelete(id){ return new Promise((res, rej) => { const q = store("readwrite").delete(id); q.onsuccess = res; q.onerror = () => rej(q.error); }); }
+function dbClear(){ return new Promise((res, rej) => { const q = store("readwrite").clear(); q.onsuccess = res; q.onerror = () => rej(q.error); }); }
+function metaStore(mode){ return db.transaction("meta", mode).objectStore("meta"); }
+function metaGet(key){ return new Promise((res, rej) => { const q = metaStore("readonly").get(key); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); }); }
+function metaPut(key, val){ return new Promise((res, rej) => { const q = metaStore("readwrite").put(val, key); q.onsuccess = res; q.onerror = () => rej(q.error); }); }
+
+function loadLS(){
+  try { return JSON.parse(localStorage.getItem(LS_KEY)) || {}; } catch(e){ return {}; }
+}
+function saveLS(){
+  localStorage.setItem(LS_KEY, JSON.stringify({ moveDate: state.moveDate, checks: state.checks, customTasks: state.customTasks, dirty: state.dirty || 0, lastBackup: state.lastBackup || null }));
+}
+
+/* ================= state ================= */
+const state = {
+  boxes: [],
+  moveDate: "2026-08-01",
+  checks: {},        // taskId -> true
+  customTasks: [],   // {id, group, label}
+  editingId: null,
+  editPhotos: []
+};
+
+/* ================= schedule data ================= */
+const SCHEDULE = [
+  { id:"g1", title:"今すぐ着手（3週間前〜）", from:-21, to:-15, tasks:[
+    { id:"t-sodai", label:"不用品の仕分けと粗大ごみの収集予約", note:"自治体の予約は2週間待ちのことも。最優先。1000km運ぶ価値がない家具・家電は処分や買い替えも検討。" },
+    { id:"t-gyosha", label:"業者にPC・電子キーボード・ストーブの扱いを確認", note:"精密機器の専用資材、キーボードのサイズ申告、灯油機器の条件を確認。" },
+    { id:"t-toyu", label:"灯油を使い切る計画を開始", note:"灯油が残ったストーブは運べない。最終週の空焚きから逆算して消費。" },
+    { id:"t-pack1", label:"使わない物から荷造り開始（封止前写真＋番号）", note:"季節外の物・本・飾りから。閉じる直前に番号入りで中身を撮影→このアプリに登録。" },
+    { id:"t-backup", label:"PCデータのバックアップ", note:"クラウドか外付けHDDへ。バックアップ媒体は段ボールに入れず手荷物に。" }
+  ]},
+  { id:"g2", title:"2週間前（住所が決まり次第すぐ）", from:-14, to:-8, tasks:[
+    { id:"t-net", label:"インターネット回線の解約・新規申込", note:"遠距離は解約→新規になることが多い。開通工事は混むと2〜4週間待ち。転居先が決まった瞬間に最優先で。" },
+    { id:"t-tenshutsu", label:"転出届の提出", note:"転出予定日の14日前から可。マイナンバーカードがあればオンライン申請可。" },
+    { id:"t-denki", label:"電気・水道の停止／開始手配", note:"それぞれ旧居の停止と新居の開始をWebで申込。" },
+    { id:"t-gas", label:"ガスの閉栓・開栓予約", note:"開栓は立会い必須。入居日の予約が埋まりやすいので早めに。" },
+    { id:"t-yubin", label:"郵便の転送届（e転居）", note:"ネットで完結。転送開始まで数日かかるので早めに。" },
+    { id:"t-pack80", label:"荷造り8割完了", note:"日用品以外はほぼ箱詰めを終える目標。" },
+    { id:"t-reizoko", label:"冷蔵庫の食材を計画消費", note:"買い足しを止め、冷凍品から消費。" }
+  ]},
+  { id:"g3", title:"1週間前", from:-7, to:-2, tasks:[
+    { id:"t-packfin", label:"日用品以外の荷造り完了", note:"残すのは数日分の生活必需品だけ。" },
+    { id:"t-suitcase", label:"スーツケースに数日分の生活セット", note:"遠距離は荷物到着まで2〜5日空くことがある。着替え・洗面用具・常備薬・充電器を手荷物に。" },
+    { id:"t-firstbox", label:"「開封1番箱」を作る", note:"カーテン／トイレットペーパー／カッター・軍手・ドライバー／電球／風呂用品。目立つ印を付ける。" },
+    { id:"t-stove", label:"ストーブの空焚き・燃料の完全抜き取り", note:"タンクとカートリッジを空にし、最後は空焚きで燃やし切る。" },
+    { id:"t-addrlist", label:"住所変更が必要なサービスのリスト化", note:"銀行・クレカ・スマホ・保険・通販・サブスク等。入居後に一気に処理するための一覧を作る。" }
+  ]},
+  { id:"g4", title:"前日", from:-1, to:-1, tasks:[
+    { id:"t-frost", label:"冷蔵庫の電源オフ→霜取り→水抜き", note:"前日夜までに。水受けトレイの水も捨てる。" },
+    { id:"t-washer", label:"洗濯機の水抜き", note:"給水ホース・排水ホースの両方。" },
+    { id:"t-cable", label:"配線を写真に撮ってから取り外し", note:"PC・テレビ周り。ケーブルはジップ袋にまとめて箱番号をメモ。" },
+    { id:"t-valuables", label:"貴重品・印鑑・契約書類を手荷物へ", note:"賃貸契約書・身分証・通帳・バックアップHDDは段ボールに入れない。" },
+    { id:"t-doro", label:"当日の動線確保とゴミ出し", note:"廊下・玄関を空け、出せるゴミは出し切る。" }
+  ]},
+  { id:"g5", title:"当日（搬出）", from:0, to:0, tasks:[
+    { id:"t-photo-room", label:"搬出前に部屋の状態を撮影", note:"壁・床の傷を記録。退去精算のトラブル防止。" },
+    { id:"t-count", label:"箱の個数と番号を業者と最終確認", note:"このアプリの登録数と突き合わせ。" },
+    { id:"t-taikyo", label:"退去立会い・鍵の返却", note:"管理会社と時間を事前調整。" },
+    { id:"t-wasuremono", label:"忘れ物チェック", note:"ベランダ／押入れの奥／玄関上の収納／洗濯機の下。" }
+  ]},
+  { id:"g6", title:"入居後（〜2週間）", from:1, to:14, tasks:[
+    { id:"t-hannyu", label:"搬入時に箱番号で個数チェック", note:"全箱そろっているかをアプリの一覧で確認してから業者を見送る。" },
+    { id:"t-gasopen", label:"ガス開栓の立会い", note:"予約時間に在宅必須。" },
+    { id:"t-tennyu", label:"転入届（引越しから14日以内）", note:"マイナンバーカードの住所変更も同時に。" },
+    { id:"t-addr", label:"免許証・銀行・カード等の住所変更", note:"1週間前に作ったリストを上から処理。" },
+    { id:"t-unpack", label:"荷解き：「すぐ開ける」→通常の順", note:"検索機能で必要な物から。開封したらカードを「開封済み」に。" }
+  ]}
+];
+
+/* ================= utils ================= */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let toastTimer = null;
+function toast(msg){
+  const t = $("#toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
+}
+function fmtDate(d){ return (d.getMonth()+1) + "/" + d.getDate(); }
+function addDays(base, n){ const d = new Date(base + "T00:00:00"); d.setDate(d.getDate() + n); return d; }
+
+function compressImage(file){
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const MAX = 1100;
+      let w = img.naturalWidth, h = img.naturalHeight;
+      if (Math.max(w, h) > MAX){ const s = MAX / Math.max(w, h); w = Math.round(w*s); h = Math.round(h*s); }
+      const c = document.createElement("canvas"); c.width = w; c.height = h;
+      c.getContext("2d").drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      resolve(c.toDataURL("image/jpeg", 0.65));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("画像を読み込めませんでした")); };
+    img.src = url;
+  });
+}
+
+/* ================= boxes: render ================= */
+const PRI_LABEL = { first:"すぐ開ける", normal:"", later:"後回しOK" };
+
+function renderBoxes(){
+  const q = $("#searchInput").value.trim().toLowerCase();
+  const room = $("#roomFilter").value;
+  const unonly = $("#unopenedOnly").checked;
+
+  const list = state.boxes
+    .filter(b => !room || b.room === room)
+    .filter(b => !unonly || !b.opened)
+    .filter(b => {
+      if (!q) return true;
+      const hay = [ String(b.num), b.room, b.memo, ...(b.items||[]) ].join("\n").toLowerCase();
+      return hay.includes(q);
+    })
+    .sort((a,b) => a.num - b.num);
+
+  const wrap = $("#boxList");
+  wrap.innerHTML = list.map(b => {
+    const itemsHtml = (b.items||[]).map(it => {
+      let t = esc(it);
+      if (q){
+        const i = it.toLowerCase().indexOf(q);
+        if (i >= 0) t = esc(it.slice(0,i)) + "<mark>" + esc(it.slice(i, i+q.length)) + "</mark>" + esc(it.slice(i+q.length));
+      }
+      return `<span class="item-chip">${t}</span>`;
+    }).join("");
+    const photos = (b.photos||[]).map((p,i) =>
+      `<img src="${p}" loading="lazy" alt="箱${b.num}の写真${i+1}" data-act="photo" data-id="${b.id}" data-idx="${i}">`).join("");
+    return `<article class="box-card ${b.opened ? "opened" : ""}" data-id="${b.id}">
+      <div class="box-card-top">
+        <div class="numtag"><span class="l">BOX</span><span class="n">${b.num}</span></div>
+        <div class="box-head-info">
+          <div class="tag-row">
+            ${b.room ? `<span class="tag room">${esc(b.room)}</span>` : ""}
+            ${b.priority === "first" ? `<span class="tag pri-first">すぐ開ける</span>` : ""}
+            ${b.priority === "later" ? `<span class="tag pri-later">後回しOK</span>` : ""}
+            ${b.fragile ? `<span class="tag fragile">われもの注意</span>` : ""}
+            ${b.opened ? `<span class="tag opened-tag">開封済み</span>` : ""}
+          </div>
+          ${b.memo ? `<div class="box-memo">${esc(b.memo)}</div>` : ""}
+        </div>
+      </div>
+      ${itemsHtml ? `<div class="items-wrap">${itemsHtml}</div>` : ""}
+      ${photos ? `<div class="photo-strip">${photos}</div>` : ""}
+      <div class="card-actions">
+        <button class="mini-btn" data-act="edit" data-id="${b.id}">編集</button>
+        <button class="mini-btn" data-act="delete" data-id="${b.id}">削除</button>
+        <button class="mini-btn open-toggle" data-act="toggle" data-id="${b.id}">${b.opened ? "未開封に戻す" : "開封済みにする"}</button>
+      </div>
+    </article>`;
+  }).join("");
+
+  $("#emptyNote").hidden = state.boxes.length > 0;
+  const opened = state.boxes.filter(b => b.opened).length;
+  $("#boxStats").textContent = state.boxes.length
+    ? `全 ${state.boxes.length} 箱 ・ 開封済み ${opened}/${state.boxes.length}` : "";
+
+  // room filter options + datalist
+  const rooms = [...new Set(state.boxes.map(b => b.room).filter(Boolean))].sort();
+  const sel = $("#roomFilter");
+  const cur = sel.value;
+  sel.innerHTML = `<option value="">全ての部屋</option>` + rooms.map(r => `<option ${r===cur?"selected":""}>${esc(r)}</option>`).join("");
+  $("#roomList").innerHTML = rooms.map(r => `<option value="${esc(r)}">`).join("");
+}
+
+/* ================= boxes: dialog ================= */
+function nextNum(){ return state.boxes.reduce((m,b) => Math.max(m, b.num), 0) + 1; }
+
+function openBoxDialog(box){
+  state.editingId = box ? box.id : null;
+  state.editPhotos = box ? [...(box.photos||[])] : [];
+  $("#dlgTitle").textContent = box ? `箱 ${box.num} を編集` : "箱を追加";
+  $("#fNum").value = box ? box.num : nextNum();
+  $("#fRoom").value = box ? (box.room||"") : "";
+  $("#fPri").value = box ? (box.priority||"normal") : "normal";
+  $("#fFragile").checked = box ? !!box.fragile : false;
+  $("#fItems").value = box ? (box.items||[]).join("\n") : "";
+  $("#fMemo").value = box ? (box.memo||"") : "";
+  renderPhotoEdit();
+  $("#boxDialog").showModal();
+}
+function renderPhotoEdit(){
+  const w = $("#photoEdit");
+  w.innerHTML = state.editPhotos.map((p,i) =>
+    `<div class="ph"><img src="${p}" alt="写真${i+1}"><button class="rm" data-rm="${i}" type="button" aria-label="写真を削除">×</button></div>`
+  ).join("") + `<button class="photo-add-btn" id="btnAddPhoto" type="button" aria-label="写真を追加">＋</button>`;
+}
+async function saveBox(){
+  const num = parseInt($("#fNum").value, 10);
+  if (!num || num < 1){ toast("箱番号を入力してください"); return; }
+  const dup = state.boxes.find(b => b.num === num && b.id !== state.editingId);
+  if (dup && !confirm(`箱番号 ${num} は既に使われています。このまま保存しますか?`)) return;
+
+  const box = {
+    id: state.editingId || ("b" + Date.now() + Math.random().toString(36).slice(2,6)),
+    num,
+    room: $("#fRoom").value.trim(),
+    priority: $("#fPri").value,
+    fragile: $("#fFragile").checked,
+    items: $("#fItems").value.split("\n").map(s => s.trim()).filter(Boolean),
+    memo: $("#fMemo").value.trim(),
+    photos: state.editPhotos,
+    opened: state.editingId ? (state.boxes.find(b => b.id === state.editingId)?.opened || false) : false,
+    created: state.editingId ? (state.boxes.find(b => b.id === state.editingId)?.created || Date.now()) : Date.now()
+  };
+  await dbPut(box);
+  touchDirty();
+  const i = state.boxes.findIndex(b => b.id === box.id);
+  if (i >= 0) state.boxes[i] = box; else state.boxes.push(box);
+  $("#boxDialog").close();
+  renderBoxes();
+  toast(`箱 ${box.num} を保存しました`);
+}
+
+/* ================= schedule ================= */
+function renderSchedule(){
+  $("#moveDate").value = state.moveDate;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const mv = new Date(state.moveDate + "T00:00:00");
+  const diff = Math.round((mv - today) / 86400000);
+  $("#countdown").innerHTML = diff > 0 ? `引越しまで <b>${diff}</b> 日`
+    : diff === 0 ? `<b>引越し当日!</b>` : `引越しから ${-diff} 日`;
+
+  const collapsed = renderSchedule._collapsed || (renderSchedule._collapsed = {});
+  let total = 0, done = 0;
+
+  $("#schedGroups").innerHTML = SCHEDULE.map(g => {
+    const custom = state.customTasks.filter(t => t.group === g.id);
+    const tasks = [...g.tasks, ...custom];
+    const gd = tasks.filter(t => state.checks[t.id]).length;
+    total += tasks.length; done += gd;
+    const d1 = addDays(state.moveDate, g.from), d2 = addDays(state.moveDate, g.to);
+    const range = g.from === g.to ? fmtDate(d1) : `${fmtDate(d1)}〜${fmtDate(d2)}`;
+    const isNow = diff >= -g.to && diff <= -g.from;  /* today within group window */
+    const when = g.from === 0 ? "当日" : g.from > 0 ? "入居後" : (g.from === -1 ? "前日" : `${-g.to}〜${-g.from}日前`);
+    const allDone = gd === tasks.length && tasks.length > 0;
+    return `<section class="sgroup ${collapsed[g.id] ? "collapsed" : ""}" data-g="${g.id}">
+      <button class="sgroup-head" data-toggle="${g.id}">
+        <span class="sg-when ${isNow ? "urgent" : ""}">${isNow ? "今ここ" : when}</span>
+        <span class="sg-title">${esc(g.title)}<span class="sg-dates">${range}</span></span>
+        <span class="sg-count ${allDone ? "done" : ""}">${allDone ? "✓ 完了" : gd + "/" + tasks.length}</span>
+        <svg class="sg-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="sg-body">
+        ${tasks.map(t => `<label class="task ${state.checks[t.id] ? "done" : ""}">
+          <input type="checkbox" data-task="${t.id}" ${state.checks[t.id] ? "checked" : ""}>
+          <span class="tx">${esc(t.label)}${t.note ? `<small>${esc(t.note)}</small>` : ""}</span>
+          ${t.custom ? `<button class="del-task" data-deltask="${t.id}" type="button" aria-label="タスクを削除">×</button>` : ""}
+        </label>`).join("")}
+        <div class="add-task">
+          <input type="text" placeholder="タスクを追加..." data-addinput="${g.id}">
+          <button data-addbtn="${g.id}" type="button">追加</button>
+        </div>
+      </div>
+    </section>`;
+  }).join("");
+
+  const pct = total ? Math.round(done / total * 100) : 0;
+  $("#totalBarFill").style.width = pct + "%";
+  $("#totalLabel").textContent = `全体の進み具合: ${done}/${total}（${pct}%）`;
+}
+
+/* ================= export / import ================= */
+function buildBackupData(){
+  return {
+    app: "hikkoshi-manager", version: 1, exported: new Date().toISOString(),
+    settings: { moveDate: state.moveDate },
+    checks: state.checks, customTasks: state.customTasks, boxes: state.boxes
+  };
+}
+function backupFileName(){
+  const d = new Date();
+  return `hikkoshi-backup-${d.getFullYear()}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}.json`;
+}
+function markBackedUp(){ state.dirty = 0; state.lastBackup = Date.now(); saveLS(); }
+function touchDirty(){
+  state.dirty = (state.dirty || 0) + 1;
+  saveLS();
+  if (state.dirty === 10) toast("変更が溜まっています。上書き保存や共有でバックアップを");
+}
+
+function exportAll(){
+  const blob = new Blob([JSON.stringify(buildBackupData())], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = backupFileName();
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  markBackedUp();
+  toast("バックアップを書き出しました");
+}
+
+/* 上書き保存: 一度選んだファイルに以後ワンクリックで保存(PCのChrome/Edge)。
+   Google Drive/iCloudの同期フォルダ内のファイルを選べば、保存のたび自動でクラウドへ上がる。 */
+let fileHandle = null;
+async function quickSave(){
+  try {
+    if (!fileHandle) fileHandle = await metaGet("fileHandle").catch(() => null) || null;
+    if (fileHandle && fileHandle.queryPermission){
+      let p = await fileHandle.queryPermission({ mode: "readwrite" });
+      if (p !== "granted") p = await fileHandle.requestPermission({ mode: "readwrite" });
+      if (p !== "granted") fileHandle = null;
+    }
+    if (!fileHandle){
+      fileHandle = await window.showSaveFilePicker({
+        suggestedName: "hikkoshi-data.json",
+        types: [{ description: "JSONデータ", accept: { "application/json": [".json"] } }]
+      });
+      await metaPut("fileHandle", fileHandle).catch(() => {});
+    }
+    const w = await fileHandle.createWritable();
+    await w.write(JSON.stringify(buildBackupData()));
+    await w.close();
+    markBackedUp();
+    toast("ファイルに上書き保存しました");
+  } catch(e){
+    if (e && e.name === "AbortError") return;
+    fileHandle = null;
+    toast("保存できませんでした。もう一度お試しください");
+  }
+}
+
+/* 共有: スマホでDrive・Gmail・LINE等のアプリへ直接渡す(iOS Safari / Android Chrome) */
+async function shareBackup(){
+  try {
+    const file = new File([JSON.stringify(buildBackupData())], backupFileName(), { type: "application/json" });
+    if (navigator.canShare && navigator.canShare({ files: [file] })){
+      await navigator.share({ files: [file], title: "引越しデータ" });
+      markBackedUp();
+    } else {
+      toast("この環境では共有機能が使えません");
+    }
+  } catch(e){ /* 共有キャンセルは何もしない */ }
+}
+async function importAll(file){
+  try {
+    const data = JSON.parse(await file.text());
+    if (data.app !== "hikkoshi-manager" || !Array.isArray(data.boxes)) throw new Error("形式が違います");
+    if (!confirm(`読み込むと現在のデータ（箱 ${state.boxes.length} 個）は置き換えられます。よろしいですか?`)) return;
+    await dbClear();
+    for (const b of data.boxes) await dbPut(b);
+    state.boxes = data.boxes;
+    state.moveDate = data.settings?.moveDate || state.moveDate;
+    state.checks = data.checks || {};
+    state.customTasks = (data.customTasks || []).map(t => ({ ...t, custom: true }));
+    state.dirty = 0; state.lastBackup = Date.now();
+    saveLS();
+    renderBoxes(); renderSchedule();
+    toast(`読み込み完了: 箱 ${state.boxes.length} 個`);
+  } catch(e){
+    alert("読み込みに失敗しました: " + e.message);
+  }
+}
+
+/* ================= events ================= */
+document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => {
+  document.querySelectorAll(".tab").forEach(x => x.classList.toggle("active", x === t));
+  const v = t.dataset.view;
+  $("#view-boxes").classList.toggle("active", v === "boxes");
+  $("#view-schedule").classList.toggle("active", v === "schedule");
+  $("#fabAdd").style.display = v === "boxes" ? "flex" : "none";
+}));
+
+$("#searchInput").addEventListener("input", renderBoxes);
+$("#roomFilter").addEventListener("change", renderBoxes);
+$("#unopenedOnly").addEventListener("change", renderBoxes);
+$("#fabAdd").addEventListener("click", () => openBoxDialog(null));
+$("#dlgClose").addEventListener("click", () => $("#boxDialog").close());
+$("#btnCancel").addEventListener("click", () => $("#boxDialog").close());
+$("#btnSave").addEventListener("click", saveBox);
+
+$("#photoEdit").addEventListener("click", e => {
+  const rm = e.target.closest("[data-rm]");
+  if (rm){ state.editPhotos.splice(parseInt(rm.dataset.rm,10), 1); renderPhotoEdit(); return; }
+  if (e.target.closest("#btnAddPhoto")) $("#fPhotos").click();
+});
+$("#fPhotos").addEventListener("change", async e => {
+  const files = [...e.target.files];
+  e.target.value = "";
+  for (const f of files){
+    try { state.editPhotos.push(await compressImage(f)); } catch(err){ toast(err.message); }
+  }
+  renderPhotoEdit();
+});
+
+$("#boxList").addEventListener("click", async e => {
+  const el = e.target.closest("[data-act]");
+  if (!el) return;
+  const id = el.dataset.id;
+  const box = state.boxes.find(b => b.id === id);
+  if (!box) return;
+  const act = el.dataset.act;
+  if (act === "edit") openBoxDialog(box);
+  else if (act === "delete"){
+    if (!confirm(`箱 ${box.num} を削除しますか?（写真も消えます）`)) return;
+    await dbDelete(id);
+    touchDirty();
+    state.boxes = state.boxes.filter(b => b.id !== id);
+    renderBoxes(); toast(`箱 ${box.num} を削除しました`);
+  }
+  else if (act === "toggle"){
+    box.opened = !box.opened;
+    await dbPut(box); touchDirty(); renderBoxes();
+  }
+  else if (act === "photo"){
+    $("#photoBig").src = box.photos[parseInt(el.dataset.idx,10)];
+    $("#photoDialog").showModal();
+  }
+});
+$("#photoDialog").addEventListener("click", () => $("#photoDialog").close());
+
+$("#moveDate").addEventListener("change", e => {
+  if (!e.target.value) return;
+  state.moveDate = e.target.value; saveLS(); renderSchedule();
+});
+
+$("#schedGroups").addEventListener("click", e => {
+  const tg = e.target.closest("[data-toggle]");
+  if (tg){
+    const g = tg.dataset.toggle;
+    renderSchedule._collapsed[g] = !renderSchedule._collapsed[g];
+    tg.closest(".sgroup").classList.toggle("collapsed");
+    return;
+  }
+  const del = e.target.closest("[data-deltask]");
+  if (del){
+    e.preventDefault();
+    const tid = del.dataset.deltask;
+    state.customTasks = state.customTasks.filter(t => t.id !== tid);
+    delete state.checks[tid];
+    saveLS(); renderSchedule();
+    return;
+  }
+  const add = e.target.closest("[data-addbtn]");
+  if (add){
+    const g = add.dataset.addbtn;
+    const input = document.querySelector(`[data-addinput="${g}"]`);
+    const label = input.value.trim();
+    if (!label) return;
+    state.customTasks.push({ id: "c" + Date.now(), group: g, label, custom: true });
+    saveLS(); renderSchedule();
+  }
+});
+$("#schedGroups").addEventListener("change", e => {
+  const cb = e.target.closest("[data-task]");
+  if (!cb) return;
+  if (cb.checked) state.checks[cb.dataset.task] = true;
+  else delete state.checks[cb.dataset.task];
+  saveLS(); renderSchedule();
+});
+$("#schedGroups").addEventListener("keydown", e => {
+  const input = e.target.closest("[data-addinput]");
+  if (input && e.key === "Enter"){
+    document.querySelector(`[data-addbtn="${input.dataset.addinput}"]`).click();
+  }
+});
+
+$("#btnQuickSave").addEventListener("click", quickSave);
+$("#btnShare").addEventListener("click", shareBackup);
+$("#btnExport").addEventListener("click", exportAll);
+$("#btnImport").addEventListener("click", () => $("#importFile").click());
+$("#importFile").addEventListener("change", e => {
+  if (e.target.files[0]) importAll(e.target.files[0]);
+  e.target.value = "";
+});
+
+/* ================= init ================= */
+(async function init(){
+  const ls = loadLS();
+  if (ls.moveDate) state.moveDate = ls.moveDate;
+  state.checks = ls.checks || {};
+  state.customTasks = (ls.customTasks || []).map(t => ({ ...t, custom: true }));
+  state.dirty = ls.dirty || 0;
+  state.lastBackup = ls.lastBackup || null;
+  if ("showSaveFilePicker" in window) $("#btnQuickSave").hidden = false;
+  try {
+    const probe = new File(["{}"], "probe.json", { type: "application/json" });
+    if (navigator.canShare && navigator.canShare({ files: [probe] })) $("#btnShare").hidden = false;
+  } catch(e){}
+  try {
+    await openDB();
+    state.boxes = await dbGetAll();
+  } catch(e){
+    alert("この環境ではデータ保存(IndexedDB)が使えないため、書き出し/読み込みでの運用をおすすめします。");
+    state.boxes = [];
+  }
+  renderBoxes();
+  renderSchedule();
+})();
+</script>
+</body>
+</html>
