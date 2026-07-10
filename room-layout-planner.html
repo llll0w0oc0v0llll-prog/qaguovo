@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>配置プランナー — ラック・家電・電子ピアノ</title>
+<style>
+:root{
+  --bg:#F2EDE2;
+  --card:#FFFDF7;
+  --kraft:#D9BE93;
+  --kraft-deep:#A87F4C;
+  --ink:#2A241A;
+  --muted:#82755F;
+  --line:#E4D9C4;
+  --tape:#2B66B8;
+  --tape-soft:#E3ECFA;
+  --danger:#B3402F;
+  --danger-soft:#F7E3DF;
+  --ok:#3B7D4F;
+  --ok-soft:#E2EFE6;
+  --warn:#9C6A12;
+  --warn-soft:#F6EBD4;
+  --piano:#6B4C8A;
+  --piano-soft:#EDE6F3;
+  --appliance:#B4791F;
+  --appliance-soft:#F5E7D0;
+  --radius:12px;
+  --shadow:0 1px 3px rgba(58,45,25,.12), 0 4px 14px rgba(58,45,25,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{
+  font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic UI","Noto Sans JP",Meiryo,sans-serif;
+  background:var(--bg);color:var(--ink);line-height:1.55;min-height:100vh;padding-bottom:40px;
+}
+button{font-family:inherit;cursor:pointer}
+input,select{font-family:inherit;font-size:15px;color:var(--ink)}
+
+header{background:var(--card);border-bottom:2px solid var(--kraft);padding:12px 16px;position:sticky;top:0;z-index:30}
+.head-row{max-width:900px;margin:0 auto;display:flex;align-items:center;gap:8px}
+.app-title{font-size:16.5px;font-weight:800;display:flex;align-items:center;gap:8px}
+.app-title .mark{width:22px;height:22px;border-radius:50%;border:2.5px solid var(--tape);position:relative;flex:none}
+.app-title .mark::after{content:"";position:absolute;inset:5px;border-radius:50%;background:var(--tape);opacity:.35}
+.head-sub{font-size:11.5px;color:var(--muted);font-weight:600;margin-left:2px}
+
+main{max-width:900px;margin:0 auto;padding:14px}
+
+.room-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px}
+.room-tab{
+  flex:none;background:var(--card);border:1.5px solid var(--line);border-radius:999px;
+  padding:7px 14px;font-size:13px;font-weight:700;color:var(--muted);white-space:nowrap;
+}
+.room-tab.active{border-color:var(--tape);color:var(--tape);background:var(--tape-soft)}
+.room-tab-add{border-style:dashed;color:var(--kraft-deep);border-color:var(--kraft-deep)}
+
+.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;margin-bottom:14px}
+.panel-title{font-size:13.5px;font-weight:800;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.field{display:flex;flex-direction:column;gap:3px}
+.field label{font-size:11px;font-weight:700;color:var(--muted)}
+.field input,.field select{border:1.5px solid var(--line);border-radius:8px;padding:7px 9px;width:100px;background:#fff}
+.field.wide input{width:160px}
+.small-btn{
+  border:1.5px solid var(--line);background:none;border-radius:8px;padding:8px 12px;
+  font-size:12.5px;font-weight:700;color:var(--muted);
+}
+.small-btn:hover{border-color:var(--kraft-deep);color:var(--ink)}
+.small-btn.danger{color:var(--danger);border-color:var(--danger-soft)}
+.small-btn.primary{background:var(--tape);color:#fff;border:none}
+
+.add-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.add-btn{
+  border:1.5px solid var(--line);border-radius:10px;padding:9px 12px;background:#fff;
+  font-size:12.5px;font-weight:700;display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:92px;
+}
+.add-btn small{font-weight:600;color:var(--muted);font-size:10.5px}
+.add-btn.rack{border-color:var(--tape);color:var(--tape)}
+.add-btn.appliance{border-color:var(--appliance);color:var(--appliance)}
+.add-btn.piano{border-color:var(--piano);color:var(--piano)}
+.add-btn.custom{border-color:var(--kraft-deep);color:var(--kraft-deep)}
+.add-btn.corridor{border-color:var(--ok);color:var(--ok)}
+
+.stage-wrap{overflow:auto;border:1.5px dashed var(--kraft-deep);border-radius:10px;background:
+  repeating-linear-gradient(0deg,#fff,#fff 49px,#EFE8D8 49px,#EFE8D8 50px),
+  repeating-linear-gradient(90deg,#fff,#fff 49px,#EFE8D8 49px,#EFE8D8 50px);
+  touch-action:none;
+}
+#stage{position:relative}
+.wall-label{position:absolute;font-size:10px;font-weight:700;color:var(--kraft-deep);background:rgba(255,255,255,.85);padding:1px 5px;border-radius:4px}
+
+.item{
+  position:absolute;border-radius:8px;display:flex;flex-direction:column;justify-content:center;align-items:center;
+  text-align:center;font-size:11px;font-weight:800;padding:2px;line-height:1.25;user-select:none;
+  box-shadow:0 2px 6px rgba(58,45,25,.18);cursor:grab;border:2px solid transparent;overflow:hidden;
+}
+.item:active{cursor:grabbing}
+.item.rack{background:var(--tape-soft);border-color:var(--tape);color:var(--tape)}
+.item.appliance{background:var(--appliance-soft);border-color:var(--appliance);color:var(--appliance)}
+.item.piano{background:var(--piano-soft);border-color:var(--piano);color:var(--piano)}
+.item.custom{background:#EEEAE0;border-color:var(--kraft-deep);color:var(--kraft-deep)}
+.item.blocked{border-color:var(--danger) !important;box-shadow:0 0 0 3px var(--danger-soft)}
+.item .dims{font-size:9px;font-weight:600;opacity:.75}
+.item-controls{position:absolute;top:-11px;right:-6px;display:flex;gap:3px}
+.item-controls button{
+  width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(0,0,0,.15);background:#fff;
+  font-size:11px;line-height:1;font-weight:800;box-shadow:0 1px 3px rgba(0,0,0,.2);
+}
+
+.corridor{
+  position:absolute;background:repeating-linear-gradient(45deg,rgba(59,125,79,.16),rgba(59,125,79,.16) 8px,rgba(59,125,79,.28) 8px,rgba(59,125,79,.28) 16px);
+  border:2px dashed var(--ok);border-radius:6px;
+}
+.corridor .handle{
+  position:absolute;width:20px;height:20px;background:var(--ok);border-radius:50%;border:2px solid #fff;
+  box-shadow:0 1px 4px rgba(0,0,0,.3);
+}
+.corridor .handle.br{right:-10px;bottom:-10px;cursor:nwse-resize}
+.corridor .handle.tl{left:-10px;top:-10px;cursor:move}
+.corridor .del{
+  position:absolute;top:-11px;left:-11px;width:22px;height:22px;border-radius:50%;background:var(--danger);
+  color:#fff;border:2px solid #fff;font-size:11px;font-weight:800;box-shadow:0 1px 3px rgba(0,0,0,.2);
+}
+.corridor .w-label{position:absolute;bottom:2px;left:2px;font-size:9px;font-weight:800;color:var(--ok);background:rgba(255,255,255,.85);padding:1px 4px;border-radius:4px}
+
+.warn-list{margin-top:10px}
+.warn-item{
+  display:flex;align-items:center;gap:8px;background:var(--danger-soft);color:var(--danger);
+  border-radius:8px;padding:8px 10px;font-size:12.5px;font-weight:700;margin-bottom:6px;
+}
+.ok-note{
+  display:flex;align-items:center;gap:8px;background:var(--ok-soft);color:var(--ok);
+  border-radius:8px;padding:8px 10px;font-size:12.5px;font-weight:700;
+}
+
+.tips{font-size:12.5px;color:var(--muted);background:var(--warn-soft);border:1px solid #E8D6AC;border-radius:10px;padding:12px 14px;line-height:1.8}
+.tips b{color:var(--ink);display:block;margin-bottom:4px;font-size:13px}
+.tips ul{padding-left:18px;margin-top:4px}
+
+.empty-stage{
+  padding:40px 20px;text-align:center;color:var(--muted);font-size:13.5px;
+}
+.toast{
+  position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);
+  background:var(--ink);color:#fff;font-size:13.5px;font-weight:600;border-radius:10px;
+  padding:10px 18px;opacity:0;pointer-events:none;transition:all .25s;z-index:60;white-space:nowrap;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="head-row">
+    <div class="app-title"><span class="mark"></span>配置プランナー</div>
+    <div class="head-sub">ラック・家電・電子ピアノ ＋ 動線チェック</div>
+  </div>
+</header>
+
+<main>
+  <div class="room-tabs" id="roomTabs"></div>
+
+  <div class="panel">
+    <div class="panel-title">🏠 部屋のサイズ</div>
+    <div class="row">
+      <div class="field"><label>部屋名</label><input type="text" id="roomName" class="wide"></div>
+      <div class="field"><label>幅 (cm)</label><input type="number" id="roomW" min="100" step="10"></div>
+      <div class="field"><label>奥行 (cm)</label><input type="number" id="roomD" min="100" step="10"></div>
+      <button class="small-btn primary" id="btnApplyRoom" style="align-self:flex-end">サイズを反映</button>
+      <button class="small-btn danger" id="btnDeleteRoom" style="align-self:flex-end">この部屋を削除</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">＋ 家具・動線を追加</div>
+    <div class="add-row">
+      <button class="add-btn rack" data-add="rack">ラック<small>80×30cm</small></button>
+      <button class="add-btn appliance" data-add="fridge">冷蔵庫<small>60×65cm</small></button>
+      <button class="add-btn appliance" data-add="washer">洗濯機<small>60×60cm</small></button>
+      <button class="add-btn appliance" data-add="appliance">家電(汎用)<small>60×60cm</small></button>
+      <button class="add-btn piano" data-add="piano">電子ピアノ<small>135×40cm</small></button>
+      <button class="add-btn custom" data-add="custom">カスタム家具<small>サイズ指定</small></button>
+      <button class="add-btn corridor" data-add="corridor">動線帯を追加<small>幅60cm目安</small></button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">🗺 配置図 <span style="font-weight:600;color:var(--muted);font-size:11.5px">（ドラッグで移動・端をつまんでリサイズ）</span></div>
+    <div class="stage-wrap"><div id="stage"></div></div>
+    <div class="warn-list" id="warnList"></div>
+  </div>
+
+  <div class="tips">
+    <b>💡 配置のヒント</b>
+    <ul>
+      <li><b>動線帯</b>は「人が通る帯」を表します。緑の帯に家具がかかると赤枠で警告します。幅は最低60cm、台車を通す場合は80cm以上推奨。</li>
+      <li><b>電子ピアノ</b>：直射日光・エアコン風・window際は温湿度変化で電子部品に負担。壁からは背面5〜10cm離して放熱、椅子を引くスペースとして手前60〜70cmを空けると弾きやすい。</li>
+      <li><b>ラック・家電</b>：転倒防止のため、背の高いラックは壁付け推奨。冷蔵庫は放熱のため両脇・背面に数cmの隙間を。</li>
+      <li>Scaniverseのスキャン結果から実測した幅・奥行をここに入力すると、より正確な検討ができます。</li>
+    </ul>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+const $ = s => document.querySelector(s);
+let toastTimer=null;
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"),2000); }
+
+const PRESETS = {
+  rack:      { label:"ラック",     w:80,  d:30,  type:"rack" },
+  fridge:    { label:"冷蔵庫",     w:60,  d:65,  type:"appliance" },
+  washer:    { label:"洗濯機",     w:60,  d:60,  type:"appliance" },
+  appliance: { label:"家電",       w:60,  d:60,  type:"appliance" },
+  piano:     { label:"電子ピアノ", w:135, d:40,  type:"piano" },
+};
+
+let state = { rooms: [], activeId: null };
+let uid = () => "id"+Date.now()+Math.random().toString(36).slice(2,7);
+
+function newRoom(name){
+  return { id: uid(), name: name || "部屋"+(state.rooms.length+1), w:300, d:300, items:[], corridors:[] };
+}
+function activeRoom(){ return state.rooms.find(r => r.id === state.activeId); }
+
+async function loadState(){
+  try{
+    const res = await window.storage.get("room-layout-data", false);
+    if (res && res.value){ state = JSON.parse(res.value); return; }
+  } catch(e){}
+  const r = newRoom("部屋1");
+  state = { rooms:[r], activeId:r.id };
+}
+async function saveState(){
+  try{ await window.storage.set("room-layout-data", JSON.stringify(state), false); } catch(e){ toast("保存に失敗しました"); }
+}
+
+/* ===== room tabs ===== */
+function renderTabs(){
+  const wrap = $("#roomTabs");
+  wrap.innerHTML = state.rooms.map(r =>
+    `<button class="room-tab ${r.id===state.activeId?"active":""}" data-room="${r.id}">${esc(r.name)}</button>`
+  ).join("") + `<button class="room-tab room-tab-add" id="btnAddRoom">＋ 部屋を追加</button>`;
+}
+function esc(s){ return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+/* ===== stage scale ===== */
+let SCALE = 1;
+function computeScale(room){
+  const wrapEl = document.querySelector(".stage-wrap");
+  const availW = Math.max(280, wrapEl.clientWidth - 4);
+  const maxH = Math.min(window.innerHeight*0.6, 620);
+  SCALE = Math.min(availW/room.w, maxH/room.d, 2.2);
+  return SCALE;
+}
+
+/* ===== render stage ===== */
+function renderRoomFields(){
+  const r = activeRoom();
+  $("#roomName").value = r.name;
+  $("#roomW").value = r.w;
+  $("#roomD").value = r.d;
+}
+
+function renderStage(){
+  const r = activeRoom();
+  if (!r) return;
+  computeScale(r);
+  const stage = $("#stage");
+  stage.style.width = (r.w*SCALE)+"px";
+  stage.style.height = (r.d*SCALE)+"px";
+  stage.innerHTML = "";
+
+  // wall size labels
+  const wl1 = document.createElement("div");
+  wl1.className="wall-label"; wl1.style.top="4px"; wl1.style.left="4px"; wl1.textContent = r.w+"×"+r.d+" cm";
+  stage.appendChild(wl1);
+
+  // corridors first (below items)
+  r.corridors.forEach(c => stage.appendChild(buildCorridorEl(c, r)));
+  // items
+  r.items.forEach(it => stage.appendChild(buildItemEl(it, r)));
+
+  checkCollisions(r);
+}
+
+function buildCorridorEl(c, r){
+  const el = document.createElement("div");
+  el.className = "corridor";
+  el.style.left = (c.x*SCALE)+"px";
+  el.style.top = (c.y*SCALE)+"px";
+  el.style.width = (c.w*SCALE)+"px";
+  el.style.height = (c.h*SCALE)+"px";
+  el.dataset.id = c.id;
+
+  const wlab = document.createElement("div");
+  wlab.className="w-label";
+  wlab.textContent = "動線 "+Math.min(c.w,c.h)+"cm幅";
+  el.appendChild(wlab);
+
+  const del = document.createElement("button");
+  del.className="del"; del.textContent="×"; del.type="button";
+  del.addEventListener("click", e=>{ e.stopPropagation(); r.corridors = r.corridors.filter(x=>x.id!==c.id); saveState(); renderStage(); });
+  el.appendChild(del);
+
+  const tl = document.createElement("div"); tl.className="handle tl";
+  const br = document.createElement("div"); br.className="handle br";
+  el.appendChild(tl); el.appendChild(br);
+
+  makeDraggable(tl, (dx,dy)=>{
+    c.x = clamp(c.x + dx/SCALE, 0, r.w - 10);
+    c.y = clamp(c.y + dy/SCALE, 0, r.d - 10);
+  }, ()=>{ saveState(); renderStage(); });
+
+  makeDraggable(br, (dx,dy)=>{
+    c.w = clamp(c.w + dx/SCALE, 20, r.w - c.x);
+    c.h = clamp(c.h + dy/SCALE, 20, r.d - c.y);
+  }, ()=>{ saveState(); renderStage(); });
+
+  return el;
+}
+
+function buildItemEl(it, r){
+  const el = document.createElement("div");
+  el.className = "item "+it.type;
+  const w = it.rot ? it.d : it.w;
+  const d = it.rot ? it.w : it.d;
+  el.style.left = (it.x*SCALE)+"px";
+  el.style.top = (it.y*SCALE)+"px";
+  el.style.width = (w*SCALE)+"px";
+  el.style.height = (d*SCALE)+"px";
+  el.dataset.id = it.id;
+  el.innerHTML = `<div>${esc(it.label)}</div><div class="dims">${w}×${d}cm</div>`;
+
+  const ctrl = document.createElement("div");
+  ctrl.className = "item-controls";
+  const rotBtn = document.createElement("button"); rotBtn.textContent="⟳"; rotBtn.type="button"; rotBtn.title="90°回転";
+  rotBtn.addEventListener("click", e=>{ e.stopPropagation(); it.rot = !it.rot; it.x=clamp(it.x,0,r.w-(it.rot?it.d:it.w)); it.y=clamp(it.y,0,r.d-(it.rot?it.w:it.d)); saveState(); renderStage(); });
+  const delBtn = document.createElement("button"); delBtn.textContent="×"; delBtn.type="button"; delBtn.title="削除";
+  delBtn.addEventListener("click", e=>{ e.stopPropagation(); r.items = r.items.filter(x=>x.id!==it.id); saveState(); renderStage(); });
+  ctrl.appendChild(rotBtn); ctrl.appendChild(delBtn);
+  el.appendChild(ctrl);
+
+  makeDraggable(el, (dx,dy)=>{
+    const ww = it.rot ? it.d : it.w, dd = it.rot ? it.w : it.d;
+    it.x = clamp(it.x + dx/SCALE, 0, r.w - ww);
+    it.y = clamp(it.y + dy/SCALE, 0, r.d - dd);
+  }, ()=>{ saveState(); renderStage(); }, true);
+
+  return el;
+}
+
+function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+
+/* pointer drag helper: reports delta in px, calls onMove continuously, onEnd on release */
+function makeDraggable(el, onMoveDeltaCm, onEnd, isItemDrag){
+  let sx=0, sy=0, dragging=false;
+  el.addEventListener("pointerdown", e=>{
+    if (e.target.closest(".item-controls") || e.target.closest(".del")) return;
+    dragging = true; sx = e.clientX; sy = e.clientY;
+    el.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  });
+  el.addEventListener("pointermove", e=>{
+    if (!dragging) return;
+    const dx = e.clientX - sx, dy = e.clientY - sy;
+    sx = e.clientX; sy = e.clientY;
+    onMoveDeltaCm(dx, dy);
+    // live reposition without full re-render for smoothness
+    if (isItemDrag){
+      el.style.left = (parseFloat(el.style.left)+dx)+"px";
+      el.style.top = (parseFloat(el.style.top)+dy)+"px";
+    } else {
+      el.style.left = (parseFloat(el.style.left)+dx)+"px";
+      el.style.top = (parseFloat(el.style.top)+dy)+"px";
+      const br = el.querySelector(".br");
+      if (br && el.classList.contains("corridor") === false){}
+    }
+  });
+  const end = e=>{ if(!dragging) return; dragging=false; onEnd(); };
+  el.addEventListener("pointerup", end);
+  el.addEventListener("pointercancel", end);
+}
+
+/* collision: item AABB vs corridor AABB */
+function checkCollisions(r){
+  const warnBox = $("#warnList");
+  let warnings = [];
+  r.items.forEach(it => {
+    const w = it.rot ? it.d : it.w, d = it.rot ? it.w : it.d;
+    const blocked = r.corridors.some(c => rectsOverlap(it.x, it.y, w, d, c.x, c.y, c.w, c.h));
+    const el = document.querySelector(`.item[data-id="${it.id}"]`);
+    if (el) el.classList.toggle("blocked", blocked);
+    if (blocked) warnings.push(it.label+"が動線帯にかかっています");
+  });
+  if (warnings.length){
+    warnBox.innerHTML = warnings.map(w=>`<div class="warn-item">⚠️ ${esc(w)}</div>`).join("");
+  } else if (r.items.length){
+    warnBox.innerHTML = `<div class="ok-note">✓ 家具は動線帯を塞いでいません</div>`;
+  } else {
+    warnBox.innerHTML = "";
+  }
+}
+function rectsOverlap(x1,y1,w1,h1,x2,y2,w2,h2){
+  return x1 < x2+w2 && x1+w1 > x2 && y1 < y2+h2 && y1+h1 > y2;
+}
+
+/* ===== events ===== */
+$("#roomTabs").addEventListener("click", e=>{
+  const t = e.target.closest("[data-room]");
+  if (t){ state.activeId = t.dataset.room; saveState(); renderAll(); return; }
+  if (e.target.id === "btnAddRoom"){
+    const r = newRoom(); state.rooms.push(r); state.activeId = r.id; saveState(); renderAll();
+  }
+});
+$("#btnApplyRoom").addEventListener("click", ()=>{
+  const r = activeRoom();
+  r.name = $("#roomName").value.trim() || r.name;
+  r.w = clamp(parseInt($("#roomW").value,10)||300, 100, 2000);
+  r.d = clamp(parseInt($("#roomD").value,10)||300, 100, 2000);
+  r.items.forEach(it=>{
+    const w = it.rot?it.d:it.w, d = it.rot?it.w:it.d;
+    it.x = clamp(it.x,0,Math.max(0,r.w-w)); it.y = clamp(it.y,0,Math.max(0,r.d-d));
+  });
+  r.corridors.forEach(c=>{
+    c.w = clamp(c.w,20,r.w); c.h = clamp(c.h,20,r.d);
+    c.x = clamp(c.x,0,Math.max(0,r.w-c.w)); c.y = clamp(c.y,0,Math.max(0,r.d-c.h));
+  });
+  saveState(); renderAll(); toast("部屋サイズを更新しました");
+});
+$("#btnDeleteRoom").addEventListener("click", ()=>{
+  if (state.rooms.length <= 1){ toast("最後の部屋は削除できません"); return; }
+  if (!confirm("この部屋の配置データを削除しますか?")) return;
+  state.rooms = state.rooms.filter(r=>r.id!==state.activeId);
+  state.activeId = state.rooms[0].id;
+  saveState(); renderAll();
+});
+
+document.querySelectorAll("[data-add]").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    const r = activeRoom();
+    const key = btn.dataset.add;
+    if (key === "corridor"){
+      r.corridors.push({ id:uid(), x:20, y:20, w:Math.min(200,r.w-40), h:60 });
+    } else if (key === "custom"){
+      const label = prompt("家具の名前を入力してください", "サイドテーブル");
+      if (!label) return;
+      const w = parseInt(prompt("幅(cm)", "50"),10) || 50;
+      const d = parseInt(prompt("奥行(cm)", "40"),10) || 40;
+      r.items.push({ id:uid(), label, w, d, x:20, y:20, rot:false, type:"custom" });
+    } else {
+      const p = PRESETS[key];
+      r.items.push({ id:uid(), label:p.label, w:p.w, d:p.d, x:20, y:20, rot:false, type:p.type });
+    }
+    saveState(); renderStage();
+  });
+});
+
+window.addEventListener("resize", ()=>{ renderStage(); });
+
+function renderAll(){ renderTabs(); renderRoomFields(); renderStage(); }
+
+(async function init(){
+  await loadState();
+  renderAll();
+})();
+</script>
+</body>
+</html>
