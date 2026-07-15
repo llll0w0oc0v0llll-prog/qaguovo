@@ -26,7 +26,7 @@
       max-width: 500px;
       margin: 0 auto;
     }
-    
+
     /* 選択エリア */
     .controls {
       background: white;
@@ -86,6 +86,12 @@
       color: #d32f2f;
       font-weight: bold;
     }
+    /* 次々発（追加） */
+    .after-next {
+      font-size: 0.9em;
+      color: #555;
+      margin-top: 8px;
+    }
 
     /* 時刻表リスト */
     .timetable {
@@ -93,6 +99,10 @@
       border-radius: 8px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
       overflow: hidden;
+      /* 自動スクロールをこの枠内に閉じ込める（ページ全体は動かさない） */
+      position: relative;
+      max-height: 55vh;
+      overflow-y: auto;
     }
     .time-item {
       padding: 12px 15px;
@@ -158,7 +168,7 @@
         id: "jieitai_furukawa",
         name: "自衛隊前 (古川方面)",
         timetable: {
-          // ※テスト用に現在時刻に近いダミーデータを入れています。後で本物に書き換えてください。
+          // ※テスト用のダミーデータです。後で本物に書き換えてください。
           weekday: ["07:15", "08:10", "12:30", "15:45", "18:20", "20:00", "22:15"],
           holiday: ["08:00", "10:30", "14:00", "17:15", "19:30"]
         }
@@ -200,11 +210,17 @@
     // ==========================================
     // 2. アプリの動作ロジック
     // ==========================================
+    const STORAGE_KEY = "mybus_stop_index"; // 前回選んだ停留所の保存キー
     let currentDayType = "weekday";
+    let currentStopIndex = 0;
+    let lastNextIndex = null; // 直近の「次発」位置。切り替わった時だけリストを描き直すための記録
+
+    // localStorage（プライベートモード等で例外が出ても落ちないように保護）
+    function saveStop(i) { try { localStorage.setItem(STORAGE_KEY, i); } catch (e) {} }
+    function loadStop() { try { return Number(localStorage.getItem(STORAGE_KEY)); } catch (e) { return NaN; } }
 
     // 画面が読み込まれたときの初期設定
-    window.onload = function() {
-      // ドロップダウンリストを作成
+    window.onload = function () {
       const select = document.getElementById("stop-select");
       busData.forEach((stop, index) => {
         const option = document.createElement("option");
@@ -213,107 +229,169 @@
         select.appendChild(option);
       });
 
-      // 停留所が変更されたら再描画
-      select.addEventListener("change", render);
+      // 前回選んだ停留所を復元
+      const saved = loadStop();
+      if (!Number.isNaN(saved) && busData[saved]) {
+        currentStopIndex = saved;
+      }
+      select.value = currentStopIndex;
 
-      // 今日の曜日からデフォルトのダイヤを設定
+      // 停留所が変更されたら保存して再描画
+      select.addEventListener("change", () => {
+        currentStopIndex = Number(select.value);
+        saveStop(currentStopIndex);
+        renderList();
+      });
+
+      // 今日の曜日からデフォルトのダイヤを設定（祝日は手動運用）
       autoSetDayType();
 
-      // 初回描画
-      render();
+      // 初回リスト描画 ＋ 毎秒更新開始
+      renderList();
+      setInterval(tick, 1000);
 
-      // 1分ごとに表示を自動更新
-      setInterval(render, 60000);
+      // アプリに戻ってきた瞬間に即時更新（バックグラウンドで間引かれた分を補正）
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) tick();
+      });
     };
 
-    // 今日が平日か土日か判定して設定
+    // 今日が平日か土日かで初期ダイヤを設定
     function autoSetDayType() {
-      const today = new Date();
-      const dayOfWeek = today.getDay(); // 0:日, 1:月... 6:土
-      // 簡易的に土日を休日ダイヤとする（祝日判定は別途設定が必要）
-      if (dayOfWeek === 0 || dayOfWeek === 6) {
-        setDayType('holiday');
-      } else {
-        setDayType('weekday');
-      }
+      const day = new Date().getDay(); // 0:日, 1:月 ... 6:土
+      currentDayType = (day === 0 || day === 6) ? "holiday" : "weekday";
+      applyDayTypeButton();
     }
 
     // ボタンでダイヤを切り替える処理
     function setDayType(type) {
       currentDayType = type;
-      document.getElementById("btn-weekday").classList.remove("active");
-      document.getElementById("btn-holiday").classList.remove("active");
-      document.getElementById(`btn-${type}`).classList.add("active");
-      render();
+      applyDayTypeButton();
+      renderList();
     }
 
-    // 画面の描画処理
-    function render() {
-      const selectedIndex = document.getElementById("stop-select").value;
-      const stopData = busData[selectedIndex];
-      const times = stopData.timetable[currentDayType];
-      
-      const now = new Date();
-      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    // ボタンの見た目（active）を現在のダイヤに合わせる
+    function applyDayTypeButton() {
+      document.getElementById("btn-weekday").classList.remove("active");
+      document.getElementById("btn-holiday").classList.remove("active");
+      document.getElementById(`btn-${currentDayType}`).classList.add("active");
+    }
 
-      let nextBusFound = false;
-      let nextBusTimeStr = "--:--";
-      let minutesUntil = -1;
+    // "HH:MM" → その日の0時からの秒数
+    function toSeconds(str) {
+      const [h, m] = str.split(":").map(Number);
+      return h * 3600 + m * 60;
+    }
+    // 現在時刻を秒で取得
+    function nowSeconds() {
+      const n = new Date();
+      return n.getHours() * 3600 + n.getMinutes() * 60 + n.getSeconds();
+    }
 
-      const listContainer = document.getElementById("timetable-list");
-      listContainer.innerHTML = ""; // リストを一旦クリア
+    // 次発の位置（まだ発車していない最初の便）。無ければ -1
+    function getNextIndex(times) {
+      const now = nowSeconds();
+      for (let i = 0; i < times.length; i++) {
+        if (toSeconds(times[i]) > now) return i;
+      }
+      return -1;
+    }
 
-      // 時刻表データをループ処理
-      times.forEach(timeStr => {
-        const [hours, minutes] = timeStr.split(":").map(Number);
-        const timeInMinutes = hours * 60 + minutes;
-        
-        const itemDiv = document.createElement("div");
-        itemDiv.className = "time-item";
-        
+    // ---- 重い処理：リスト全体を描き直す ----
+    // 実行タイミングは「停留所/ダイヤ変更時」と「便が発車した瞬間」だけ
+    function renderList() {
+      const stop = busData[currentStopIndex];
+      const times = stop.timetable[currentDayType];
+      const nextIndex = getNextIndex(times);
+      lastNextIndex = nextIndex;
+
+      const list = document.getElementById("timetable-list");
+      list.innerHTML = "";
+
+      let nextEl = null;
+      times.forEach((timeStr, i) => {
+        const item = document.createElement("div");
+        item.className = "time-item";
+
         const timeSpan = document.createElement("span");
         timeSpan.textContent = timeStr;
-        itemDiv.appendChild(timeSpan);
+        item.appendChild(timeSpan);
 
-        // 過ぎた時間か、これからの時間か判定
-        if (timeInMinutes < currentMinutes) {
-          itemDiv.classList.add("passed");
-          const statusSpan = document.createElement("span");
-          statusSpan.textContent = "出発済";
-          statusSpan.style.fontSize = "0.8em";
-          itemDiv.appendChild(statusSpan);
-        } else {
-          // まだ出発していない最初のバスを「次のバス」とする
-          if (!nextBusFound) {
-            itemDiv.classList.add("next");
-            nextBusFound = true;
-            nextBusTimeStr = timeStr;
-            minutesUntil = timeInMinutes - currentMinutes;
-            
-            const statusSpan = document.createElement("span");
-            statusSpan.textContent = "次発";
-            statusSpan.style.color = "#d32f2f";
-            statusSpan.style.fontWeight = "bold";
-            itemDiv.appendChild(statusSpan);
-          }
+        const status = document.createElement("span");
+        if (nextIndex === -1 || i < nextIndex) {
+          // 発車済み（または本日終了）
+          item.classList.add("passed");
+          status.textContent = "出発済";
+          status.style.fontSize = "0.8em";
+        } else if (i === nextIndex) {
+          // 次発
+          item.classList.add("next");
+          status.textContent = "次発";
+          status.style.color = "#d32f2f";
+          status.style.fontWeight = "bold";
+          nextEl = item;
         }
-        listContainer.appendChild(itemDiv);
+        item.appendChild(status);
+        list.appendChild(item);
       });
 
-      // 次のバスエリアの更新
-      const displayDiv = document.getElementById("next-bus-display");
-      if (nextBusFound) {
-        let timeText = `（あと ${minutesUntil} 分）`;
-        if (minutesUntil === 0) timeText = "（まもなく到着）";
-        if (minutesUntil >= 60) {
-           const h = Math.floor(minutesUntil / 60);
-           const m = minutesUntil % 60;
-           timeText = `（あと ${h}時間${m}分）`;
-        }
-        displayDiv.innerHTML = `<span class="next-bus-time">${nextBusTimeStr}</span> <span class="countdown">${timeText}</span>`;
-      } else {
-        displayDiv.innerHTML = `<span class="next-bus-time">--:--</span> <span class="countdown" style="color:#666;">（本日の運行は終了しました）</span>`;
+      // 次発をリスト枠の中央付近へ自動スクロール（ページ全体は動かさない）
+      if (nextEl) {
+        const target = nextEl.offsetTop - (list.clientHeight - nextEl.clientHeight) / 2;
+        list.scrollTop = Math.max(0, target);
       }
+
+      updateNextCard(times, nextIndex);
+    }
+
+    // ---- 軽い処理：毎秒呼ばれる ----
+    // 便が切り替わった時だけリストを描き直し、それ以外はカウントダウン文字だけ更新
+    function tick() {
+      const stop = busData[currentStopIndex];
+      const times = stop.timetable[currentDayType];
+      const nextIndex = getNextIndex(times);
+
+      if (nextIndex !== lastNextIndex) {
+        renderList(); // 発車したので「出発済/次発」の表示を更新
+      } else {
+        updateNextCard(times, nextIndex);
+      }
+    }
+
+    // 「次に乗れるバス」カードの文言を更新
+    function updateNextCard(times, nextIndex) {
+      const display = document.getElementById("next-bus-display");
+
+      if (nextIndex === -1) {
+        display.innerHTML =
+          '<span class="next-bus-time">--:--</span> ' +
+          '<span class="countdown" style="color:#666;">（本日の運行は終了しました）</span>';
+        return;
+      }
+
+      const remain = toSeconds(times[nextIndex]) - nowSeconds(); // 残り秒数
+      let text;
+      if (remain >= 3600) {
+        const h = Math.floor(remain / 3600);
+        const m = Math.floor((remain % 3600) / 60);
+        text = `（あと ${h}時間${m}分）`;
+      } else if (remain >= 60) {
+        const m = Math.floor(remain / 60);
+        const s = remain % 60;
+        text = `（あと ${m}分${s}秒）`;
+      } else {
+        text = `（あと ${remain}秒）`;
+      }
+
+      // 次々発（あれば表示）
+      let afterText = "";
+      if (times[nextIndex + 1]) {
+        afterText = `<div class="after-next">次々発 ${times[nextIndex + 1]}</div>`;
+      }
+
+      display.innerHTML =
+        `<span class="next-bus-time">${times[nextIndex]}</span> ` +
+        `<span class="countdown">${text}</span>${afterText}`;
     }
   </script>
 </body>
