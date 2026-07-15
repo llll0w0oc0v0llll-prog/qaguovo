@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>マイバス時刻表</title>
+  <style>
+    /* 全体のデザイン（スマホ向け） */
+    body {
+      font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f7f6;
+      color: #333;
+    }
+    header {
+      background-color: #0056b3;
+      color: white;
+      padding: 15px;
+      text-align: center;
+      font-size: 1.2em;
+      font-weight: bold;
+    }
+    .container {
+      padding: 15px;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    
+    /* 選択エリア */
+    .controls {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    select {
+      width: 100%;
+      padding: 10px;
+      font-size: 1em;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      margin-bottom: 10px;
+    }
+    .day-type-switch {
+      display: flex;
+      gap: 10px;
+    }
+    .day-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      background-color: #e0e0e0;
+      color: #333;
+      border-radius: 4px;
+      font-size: 1em;
+      cursor: pointer;
+    }
+    .day-btn.active {
+      background-color: #0056b3;
+      color: white;
+      font-weight: bold;
+    }
+
+    /* 次のバス表示エリア */
+    .next-bus-card {
+      background: #e3f2fd;
+      border-left: 5px solid #0056b3;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .next-bus-label {
+      font-size: 0.9em;
+      color: #0056b3;
+      margin-bottom: 5px;
+    }
+    .next-bus-time {
+      font-size: 2em;
+      font-weight: bold;
+      color: #333;
+    }
+    .countdown {
+      font-size: 1.1em;
+      color: #d32f2f;
+      font-weight: bold;
+    }
+
+    /* 時刻表リスト */
+    .timetable {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    .time-item {
+      padding: 12px 15px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 1.1em;
+    }
+    .time-item:last-child {
+      border-bottom: none;
+    }
+    .time-item.passed {
+      color: #aaa;
+      background-color: #f9f9f9;
+    }
+    .time-item.next {
+      background-color: #fff9c4;
+      font-weight: bold;
+      border-left: 4px solid #fbc02d;
+    }
+  </style>
+</head>
+<body>
+
+  <header>マイバス時刻表</header>
+
+  <div class="container">
+    <div class="controls">
+      <!-- 停留所選択 -->
+      <select id="stop-select">
+        <!-- Javascriptで自動生成されます -->
+      </select>
+
+      <!-- 平日/土日祝 切り替え -->
+      <div class="day-type-switch">
+        <button id="btn-weekday" class="day-btn active" onclick="setDayType('weekday')">平日ダイヤ</button>
+        <button id="btn-holiday" class="day-btn" onclick="setDayType('holiday')">土日祝ダイヤ</button>
+      </div>
+    </div>
+
+    <!-- 次のバス表示 -->
+    <div class="next-bus-card">
+      <div class="next-bus-label">次に乗れるバス</div>
+      <div id="next-bus-display">
+        <span class="next-bus-time">--:--</span>
+        <span class="countdown">（---）</span>
+      </div>
+    </div>
+
+    <!-- 時刻表リスト -->
+    <div class="timetable" id="timetable-list">
+      <!-- Javascriptで自動生成されます -->
+    </div>
+  </div>
+
+  <script>
+    // ==========================================
+    // 1. データ設定エリア（後からココを増やすだけ！）
+    // ==========================================
+    const busData = [
+      {
+        id: "jieitai_furukawa",
+        name: "自衛隊前 (古川方面)",
+        timetable: {
+          // ※テスト用に現在時刻に近いダミーデータを入れています。後で本物に書き換えてください。
+          weekday: ["07:15", "08:10", "12:30", "15:45", "18:20", "20:00", "22:15"],
+          holiday: ["08:00", "10:30", "14:00", "17:15", "19:30"]
+        }
+      },
+      {
+        id: "shukusha_furukawa",
+        name: "自衛隊宿舎前 (古川方面)",
+        timetable: {
+          weekday: ["07:17", "08:12", "12:32", "15:47", "18:22", "20:02", "22:17"],
+          holiday: ["08:02", "10:32", "14:02", "17:17", "19:32"]
+        }
+      },
+      {
+        id: "namidate_furukawa",
+        name: "浪館 (古川・青森駅方面)",
+        timetable: {
+          weekday: ["07:20", "08:15", "12:35", "15:50", "18:25"],
+          holiday: ["08:05", "10:35", "14:05", "17:20"]
+        }
+      },
+      {
+        id: "namidate_suburb",
+        name: "浪館 (郊外・自衛隊方面)",
+        timetable: {
+          weekday: ["07:40", "08:45", "13:00", "16:20", "19:00"],
+          holiday: ["08:30", "11:00", "14:30", "18:00"]
+        }
+      },
+      {
+        id: "aomori_namidate",
+        name: "青森駅前 (浪館方面)",
+        timetable: {
+          weekday: ["07:50", "08:55", "13:10", "16:30", "19:10", "21:00"],
+          holiday: ["08:40", "11:10", "14:40", "18:10"]
+        }
+      }
+    ];
+
+    // ==========================================
+    // 2. アプリの動作ロジック
+    // ==========================================
+    let currentDayType = "weekday";
+
+    // 画面が読み込まれたときの初期設定
+    window.onload = function() {
+      // ドロップダウンリストを作成
+      const select = document.getElementById("stop-select");
+      busData.forEach((stop, index) => {
+        const option = document.createElement("option");
+        option.value = index;
+        option.text = stop.name;
+        select.appendChild(option);
+      });
+
+      // 停留所が変更されたら再描画
+      select.addEventListener("change", render);
+
+      // 今日の曜日からデフォルトのダイヤを設定
+      autoSetDayType();
+
+      // 初回描画
+      render();
+
+      // 1分ごとに表示を自動更新
+      setInterval(render, 60000);
+    };
+
+    // 今日が平日か土日か判定して設定
+    function autoSetDayType() {
+      const today = new Date();
+      const dayOfWeek = today.getDay(); // 0:日, 1:月... 6:土
+      // 簡易的に土日を休日ダイヤとする（祝日判定は別途設定が必要）
+      if (dayOfWeek === 0 || dayOfWeek === 6) {
+        setDayType('holiday');
+      } else {
+        setDayType('weekday');
+      }
+    }
+
+    // ボタンでダイヤを切り替える処理
+    function setDayType(type) {
+      currentDayType = type;
+      document.getElementById("btn-weekday").classList.remove("active");
+      document.getElementById("btn-holiday").classList.remove("active");
+      document.getElementById(`btn-${type}`).classList.add("active");
+      render();
+    }
+
+    // 画面の描画処理
+    function render() {
+      const selectedIndex = document.getElementById("stop-select").value;
+      const stopData = busData[selectedIndex];
+      const times = stopData.timetable[currentDayType];
+      
+      const now = new Date();
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+      let nextBusFound = false;
+      let nextBusTimeStr = "--:--";
+      let minutesUntil = -1;
+
+      const listContainer = document.getElementById("timetable-list");
+      listContainer.innerHTML = ""; // リストを一旦クリア
+
+      // 時刻表データをループ処理
+      times.forEach(timeStr => {
+        const [hours, minutes] = timeStr.split(":").map(Number);
+        const timeInMinutes = hours * 60 + minutes;
+        
+        const itemDiv = document.createElement("div");
+        itemDiv.className = "time-item";
+        
+        const timeSpan = document.createElement("span");
+        timeSpan.textContent = timeStr;
+        itemDiv.appendChild(timeSpan);
+
+        // 過ぎた時間か、これからの時間か判定
+        if (timeInMinutes < currentMinutes) {
+          itemDiv.classList.add("passed");
+          const statusSpan = document.createElement("span");
+          statusSpan.textContent = "出発済";
+          statusSpan.style.fontSize = "0.8em";
+          itemDiv.appendChild(statusSpan);
+        } else {
+          // まだ出発していない最初のバスを「次のバス」とする
+          if (!nextBusFound) {
+            itemDiv.classList.add("next");
+            nextBusFound = true;
+            nextBusTimeStr = timeStr;
+            minutesUntil = timeInMinutes - currentMinutes;
+            
+            const statusSpan = document.createElement("span");
+            statusSpan.textContent = "次発";
+            statusSpan.style.color = "#d32f2f";
+            statusSpan.style.fontWeight = "bold";
+            itemDiv.appendChild(statusSpan);
+          }
+        }
+        listContainer.appendChild(itemDiv);
+      });
+
+      // 次のバスエリアの更新
+      const displayDiv = document.getElementById("next-bus-display");
+      if (nextBusFound) {
+        let timeText = `（あと ${minutesUntil} 分）`;
+        if (minutesUntil === 0) timeText = "（まもなく到着）";
+        if (minutesUntil >= 60) {
+           const h = Math.floor(minutesUntil / 60);
+           const m = minutesUntil % 60;
+           timeText = `（あと ${h}時間${m}分）`;
+        }
+        displayDiv.innerHTML = `<span class="next-bus-time">${nextBusTimeStr}</span> <span class="countdown">${timeText}</span>`;
+      } else {
+        displayDiv.innerHTML = `<span class="next-bus-time">--:--</span> <span class="countdown" style="color:#666;">（本日の運行は終了しました）</span>`;
+      }
+    }
+  </script>
+</body>
+</html>
