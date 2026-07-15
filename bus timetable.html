@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>マイバス時刻表</title>
+  <style>
+    /* 全体のデザイン（スマホ向け） */
+    body {
+      font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f7f6;
+      color: #333;
+    }
+    header {
+      background-color: #0056b3;
+      color: white;
+      padding: 15px;
+      text-align: center;
+      font-size: 1.2em;
+      font-weight: bold;
+    }
+    .container {
+      padding: 15px;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    /* 選択エリア */
+    .controls {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    select {
+      width: 100%;
+      padding: 10px;
+      font-size: 1em;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      margin-bottom: 10px;
+    }
+    .day-type-switch {
+      display: flex;
+      gap: 10px;
+    }
+    .day-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      background-color: #e0e0e0;
+      color: #333;
+      border-radius: 4px;
+      font-size: 1em;
+      cursor: pointer;
+    }
+    .day-btn.active {
+      background-color: #0056b3;
+      color: white;
+      font-weight: bold;
+    }
+
+    /* 次のバス表示エリア */
+    .next-bus-card {
+      background: #e3f2fd;
+      border-left: 5px solid #0056b3;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .next-bus-label {
+      font-size: 0.9em;
+      color: #0056b3;
+      margin-bottom: 5px;
+    }
+    .next-bus-time {
+      font-size: 2em;
+      font-weight: bold;
+      color: #333;
+    }
+    .countdown {
+      font-size: 1.1em;
+      color: #d32f2f;
+      font-weight: bold;
+    }
+    /* 次々発（追加） */
+    .after-next {
+      font-size: 0.9em;
+      color: #555;
+      margin-top: 8px;
+    }
+
+    /* 時刻表リスト */
+    .timetable {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      overflow: hidden;
+      /* 自動スクロールをこの枠内に閉じ込める（ページ全体は動かさない） */
+      position: relative;
+      max-height: 55vh;
+      overflow-y: auto;
+    }
+    .time-item {
+      padding: 12px 15px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 1.1em;
+    }
+    .time-item:last-child {
+      border-bottom: none;
+    }
+    .time-item.passed {
+      color: #aaa;
+      background-color: #f9f9f9;
+    }
+    .time-item.next {
+      background-color: #fff9c4;
+      font-weight: bold;
+      border-left: 4px solid #fbc02d;
+    }
+  </style>
+</head>
+<body>
+
+  <header>マイバス時刻表</header>
+
+  <div class="container">
+    <div class="controls">
+      <!-- 停留所選択 -->
+      <select id="stop-select">
+        <!-- Javascriptで自動生成されます -->
+      </select>
+
+      <!-- 平日/土日祝 切り替え -->
+      <div class="day-type-switch">
+        <button id="btn-weekday" class="day-btn active" onclick="setDayType('weekday')">平日ダイヤ</button>
+        <button id="btn-holiday" class="day-btn" onclick="setDayType('holiday')">土日祝ダイヤ</button>
+      </div>
+    </div>
+
+    <!-- 次のバス表示 -->
+    <div class="next-bus-card">
+      <div class="next-bus-label">次に乗れるバス</div>
+      <div id="next-bus-display">
+        <span class="next-bus-time">--:--</span>
+        <span class="countdown">（---）</span>
+      </div>
+    </div>
+
+    <!-- 時刻表リスト -->
+    <div class="timetable" id="timetable-list">
+      <!-- Javascriptで自動生成されます -->
+    </div>
+  </div>
+
+  <script>
+    // ==========================================
+    // 1. データ設定エリア（後からココを増やすだけ！）
+    // ==========================================
+    const busData = [
+      {
+        id: "jieitai_furukawa",
+        name: "自衛隊前 (古川方面)",
+        timetable: {
+          // ※テスト用のダミーデータです。後で本物に書き換えてください。
+          weekday: ["07:15", "08:10", "12:30", "15:45", "18:20", "20:00", "22:15"],
+          holiday: ["08:00", "10:30", "14:00", "17:15", "19:30"]
+        }
+      },
+      {
+        id: "shukusha_furukawa",
+        name: "自衛隊宿舎前 (古川方面)",
+        timetable: {
+          weekday: ["07:17", "08:12", "12:32", "15:47", "18:22", "20:02", "22:17"],
+          holiday: ["08:02", "10:32", "14:02", "17:17", "19:32"]
+        }
+      },
+      {
+        id: "namidate_furukawa",
+        name: "浪館 (古川・青森駅方面)",
+        timetable: {
+          weekday: ["07:20", "08:15", "12:35", "15:50", "18:25"],
+          holiday: ["08:05", "10:35", "14:05", "17:20"]
+        }
+      },
+      {
+        id: "namidate_suburb",
+        name: "浪館 (郊外・自衛隊方面)",
+        timetable: {
+          weekday: ["07:40", "08:45", "13:00", "16:20", "19:00"],
+          holiday: ["08:30", "11:00", "14:30", "18:00"]
+        }
+      },
+      {
+        id: "aomori_namidate",
+        name: "青森駅前 (浪館方面)",
+        timetable: {
+          weekday: ["07:50", "08:55", "13:10", "16:30", "19:10", "21:00"],
+          holiday: ["08:40", "11:10", "14:40", "18:10"]
+        }
+      }
+    ];
+
+    // ==========================================
+    // 2. アプリの動作ロジック
+    // ==========================================
+    const STORAGE_KEY = "mybus_stop_index"; // 前回選んだ停留所の保存キー
+    let currentDayType = "weekday";
+    let currentStopIndex = 0;
+    let lastNextIndex = null; // 直近の「次発」位置。切り替わった時だけリストを描き直すための記録
+
+    // localStorage（プライベートモード等で例外が出ても落ちないように保護）
+    function saveStop(i) { try { localStorage.setItem(STORAGE_KEY, i); } catch (e) {} }
+    function loadStop() { try { return Number(localStorage.getItem(STORAGE_KEY)); } catch (e) { return NaN; } }
+
+    // 画面が読み込まれたときの初期設定
+    window.onload = function () {
+      const select = document.getElementById("stop-select");
+      busData.forEach((stop, index) => {
+        const option = document.createElement("option");
+        option.value = index;
+        option.text = stop.name;
+        select.appendChild(option);
+      });
+
+      // 前回選んだ停留所を復元
+      const saved = loadStop();
+      if (!Number.isNaN(saved) && busData[saved]) {
+        currentStopIndex = saved;
+      }
+      select.value = currentStopIndex;
+
+      // 停留所が変更されたら保存して再描画
+      select.addEventListener("change", () => {
+        currentStopIndex = Number(select.value);
+        saveStop(currentStopIndex);
+        renderList();
+      });
+
+      // 今日の曜日からデフォルトのダイヤを設定（祝日は手動運用）
+      autoSetDayType();
+
+      // 初回リスト描画 ＋ 毎秒更新開始
+      renderList();
+      setInterval(tick, 1000);
+
+      // アプリに戻ってきた瞬間に即時更新（バックグラウンドで間引かれた分を補正）
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) tick();
+      });
+    };
+
+    // 今日が平日か土日かで初期ダイヤを設定
+    function autoSetDayType() {
+      const day = new Date().getDay(); // 0:日, 1:月 ... 6:土
+      currentDayType = (day === 0 || day === 6) ? "holiday" : "weekday";
+      applyDayTypeButton();
+    }
+
+    // ボタンでダイヤを切り替える処理
+    function setDayType(type) {
+      currentDayType = type;
+      applyDayTypeButton();
+      renderList();
+    }
+
+    // ボタンの見た目（active）を現在のダイヤに合わせる
+    function applyDayTypeButton() {
+      document.getElementById("btn-weekday").classList.remove("active");
+      document.getElementById("btn-holiday").classList.remove("active");
+      document.getElementById(`btn-${currentDayType}`).classList.add("active");
+    }
+
+    // "HH:MM" → その日の0時からの秒数
+    function toSeconds(str) {
+      const [h, m] = str.split(":").map(Number);
+      return h * 3600 + m * 60;
+    }
+    // 現在時刻を秒で取得
+    function nowSeconds() {
+      const n = new Date();
+      return n.getHours() * 3600 + n.getMinutes() * 60 + n.getSeconds();
+    }
+
+    // 次発の位置（まだ発車していない最初の便）。無ければ -1
+    function getNextIndex(times) {
+      const now = nowSeconds();
+      for (let i = 0; i < times.length; i++) {
+        if (toSeconds(times[i]) > now) return i;
+      }
+      return -1;
+    }
+
+    // ---- 重い処理：リスト全体を描き直す ----
+    // 実行タイミングは「停留所/ダイヤ変更時」と「便が発車した瞬間」だけ
+    function renderList() {
+      const stop = busData[currentStopIndex];
+      const times = stop.timetable[currentDayType];
+      const nextIndex = getNextIndex(times);
+      lastNextIndex = nextIndex;
+
+      const list = document.getElementById("timetable-list");
+      list.innerHTML = "";
+
+      let nextEl = null;
+      times.forEach((timeStr, i) => {
+        const item = document.createElement("div");
+        item.className = "time-item";
+
+        const timeSpan = document.createElement("span");
+        timeSpan.textContent = timeStr;
+        item.appendChild(timeSpan);
+
+        const status = document.createElement("span");
+        if (nextIndex === -1 || i < nextIndex) {
+          // 発車済み（または本日終了）
+          item.classList.add("passed");
+          status.textContent = "出発済";
+          status.style.fontSize = "0.8em";
+        } else if (i === nextIndex) {
+          // 次発
+          item.classList.add("next");
+          status.textContent = "次発";
+          status.style.color = "#d32f2f";
+          status.style.fontWeight = "bold";
+          nextEl = item;
+        }
+        item.appendChild(status);
+        list.appendChild(item);
+      });
+
+      // 次発をリスト枠の中央付近へ自動スクロール（ページ全体は動かさない）
+      if (nextEl) {
+        const target = nextEl.offsetTop - (list.clientHeight - nextEl.clientHeight) / 2;
+        list.scrollTop = Math.max(0, target);
+      }
+
+      updateNextCard(times, nextIndex);
+    }
+
+    // ---- 軽い処理：毎秒呼ばれる ----
+    // 便が切り替わった時だけリストを描き直し、それ以外はカウントダウン文字だけ更新
+    function tick() {
+      const stop = busData[currentStopIndex];
+      const times = stop.timetable[currentDayType];
+      const nextIndex = getNextIndex(times);
+
+      if (nextIndex !== lastNextIndex) {
+        renderList(); // 発車したので「出発済/次発」の表示を更新
+      } else {
+        updateNextCard(times, nextIndex);
+      }
+    }
+
+    // 「次に乗れるバス」カードの文言を更新
+    function updateNextCard(times, nextIndex) {
+      const display = document.getElementById("next-bus-display");
+
+      if (nextIndex === -1) {
+        display.innerHTML =
+          '<span class="next-bus-time">--:--</span> ' +
+          '<span class="countdown" style="color:#666;">（本日の運行は終了しました）</span>';
+        return;
+      }
+
+      const remain = toSeconds(times[nextIndex]) - nowSeconds(); // 残り秒数
+      let text;
+      if (remain >= 3600) {
+        const h = Math.floor(remain / 3600);
+        const m = Math.floor((remain % 3600) / 60);
+        text = `（あと ${h}時間${m}分）`;
+      } else if (remain >= 60) {
+        const m = Math.floor(remain / 60);
+        const s = remain % 60;
+        text = `（あと ${m}分${s}秒）`;
+      } else {
+        text = `（あと ${remain}秒）`;
+      }
+
+      // 次々発（あれば表示）
+      let afterText = "";
+      if (times[nextIndex + 1]) {
+        afterText = `<div class="after-next">次々発 ${times[nextIndex + 1]}</div>`;
+      }
+
+      display.innerHTML =
+        `<span class="next-bus-time">${times[nextIndex]}</span> ` +
+        `<span class="countdown">${text}</span>${afterText}`;
+    }
+  </script>
+</body>
+</html>
