@@ -28,6 +28,12 @@
     padding:8px 0;border-radius:7px;cursor:pointer}
   .seg button[aria-pressed="true"]{background:#fff;color:var(--brand);box-shadow:0 1px 2px rgba(0,0,0,.08)}
   .hint{font-size:11px;color:var(--sub);margin-top:8px;line-height:1.5}
+  .live{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:11px;
+    padding:11px 12px;border:1px solid var(--brand);border-radius:9px;background:#fff;
+    color:var(--brand);font-size:14px;font-weight:800;text-decoration:none}
+  .live span{font-size:12px}
+  .live:active{background:#eaf2fb}
+  .live.off{display:none}
 
   .next{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px;
     display:flex;align-items:center;gap:14px;margin-bottom:12px}
@@ -67,6 +73,7 @@
       <button id="d-weekend" aria-pressed="false">土日祝</button>
     </div>
     <div class="hint">祝日は「土日祝」を手動で選んでください。</div>
+    <a id="live" class="live" href="#" target="_blank" rel="noopener">バスの接近情報を見る<span>↗</span></a>
   </div>
 
   <div class="next" id="next"></div>
@@ -131,6 +138,15 @@ const HOME={
 };
 function homeLabel(){return HOME[stop]||"";}
 
+const LIVE={
+ "野里（伊丹方面）":"https://itamicity-bus.bus-navigation.jp/wgsys/wgss/bus.htm?selectedLandmarkCatCd=&from=%E9%87%8E%E9%87%8C&fromType=1&to=&toType=&locale=ja&fromlat=&fromlng=&tolat=&tolng=&fromSignpoleKey=8215&routeLayoutCd=&fromBusStopCd=&toBusStopCd=&mapFlag=false&existYn=N&bsid=3",
+ "緑ヶ丘7丁目（伊丹方面）":"https://itamicity-bus.bus-navigation.jp/wgsys/wgss/bus.htm?selectedLandmarkCatCd=&from=%E7%B7%91%E3%83%B6%E4%B8%98%EF%BC%97%E4%B8%81%E7%9B%AE&fromType=1&to=&toType=&locale=ja&fromlat=&fromlng=&tolat=&tolng=&fromSignpoleKey=8284&routeLayoutCd=&fromBusStopCd=&toBusStopCd=&mapFlag=false&existYn=N&bsid=3",
+ "緑ヶ丘7丁目（山本団地方面）":"https://itamicity-bus.bus-navigation.jp/wgsys/wgss/bus.htm?selectedLandmarkCatCd=&from=%E7%B7%91%E3%83%B6%E4%B8%98%EF%BC%97%E4%B8%81%E7%9B%AE&fromType=1&to=&toType=&locale=ja&fromlat=&fromlng=&tolat=&tolng=&fromSignpoleKey=8283&routeLayoutCd=&fromBusStopCd=&toBusStopCd=&mapFlag=false&existYn=N&bsid=3",
+ "ＪＲ伊丹（標柱6）":"https://itamicity-bus.bus-navigation.jp/wgsys/wgss/bus.htm?selectedLandmarkCatCd=&from=JR%E4%BC%8A%E4%B8%B9&fromType=1&to=&toType=&locale=ja&fromlat=&fromlng=&tolat=&tolng=&fromSignpoleKey=8091&routeLayoutCd=&fromBusStopCd=&toBusStopCd=&mapFlag=false&existYn=N&bsid=3",
+ "野里（宝塚方面）":"https://transfer-cloud.navitime.biz/hankyubus/approachings?departure-busstop=00020876&pole=000000005516"
+};
+
+
 const $=id=>document.getElementById(id);
 const eT=e=>typeof e==="string"?e:e.t;
 const eN=e=>typeof e==="string"?"":(e.note||"");
@@ -145,7 +161,7 @@ function initStops(){
   let saved=null; try{saved=localStorage.getItem("busStop");}catch(e){}
   stop=(saved&&busData[saved])?saved:Object.keys(busData)[0];
   sel.value=stop;
-  sel.onchange=()=>{stop=sel.value;try{localStorage.setItem("busStop",stop);}catch(e){}buildList();tick(true);};
+  sel.onchange=()=>{stop=sel.value;try{localStorage.setItem("busStop",stop);}catch(e){}updateLive();buildList();tick(true);};
 }
 function initDay(){
   const wd=[0,6].includes(new Date().getDay())?"weekend":"weekday";
@@ -160,6 +176,12 @@ function setDay(d,rebuild){
   if(rebuild){buildList();tick(true);}
 }
 function times(){return busData[stop][day];}
+
+function updateLive(){
+  const a=$("live"), url=LIVE[stop];
+  if(url){ a.href=url; a.classList.remove("off"); }
+  else{ a.removeAttribute("href"); a.classList.add("off"); }
+}
 
 function buildList(){
   const list=$("list"); list.innerHTML="";
@@ -223,6 +245,7 @@ function tick(force){
 
 initStops();
 initDay();
+updateLive();
 buildList();
 tick(true);
 setInterval(()=>tick(false),1000);
