@@ -57,6 +57,11 @@
   .r .tag{font-size:11px;font-weight:800;color:var(--tag);background:rgba(192,57,43,.09);
     padding:2px 7px;border-radius:6px}
   .r .home{font-size:11px;color:var(--sub)}
+  .r.minor{padding:6px 15px}
+  .r.minor .t{font-size:13px;font-weight:600;color:var(--sub);width:64px}
+  .r.minor .tag{font-size:9.5px;font-weight:700;color:#96a0aa;background:rgba(120,132,145,.10)}
+  .r.minor.now{background:#f2f5f7}
+  .r.minor.now .t{color:var(--sub)}
   .r .badge{margin-left:auto;font-size:10px;font-weight:800;color:var(--next);letter-spacing:.12em;visibility:hidden}
   .r.now .badge{visibility:visible}
   .foot{margin-top:14px;font-size:11px;color:var(--sub);line-height:1.7}
@@ -138,6 +143,10 @@ const HOME={
 };
 function homeLabel(){return HOME[stop]||"";}
 
+/* 主に乗らない系統（小さく表示し、次のバス候補から外す） */
+const MINOR={ "ＪＲ伊丹（標柱6）":["岩22","岩ク"] };
+function isMinor(e){ const m=MINOR[stop]; return !!(m && m.includes(eN(e))); }
+
 const LIVE={
  "野里（伊丹方面）":"https://itamicity-bus.bus-navigation.jp/wgsys/wgss/bus.htm?selectedLandmarkCatCd=&from=%E9%87%8E%E9%87%8C&fromType=1&to=&toType=&locale=ja&fromlat=&fromlng=&tolat=&tolng=&fromSignpoleKey=8215&routeLayoutCd=&fromBusStopCd=&toBusStopCd=&mapFlag=false&existYn=N&bsid=3",
  "緑ヶ丘7丁目（伊丹方面）":"https://itamicity-bus.bus-navigation.jp/wgsys/wgss/bus.htm?selectedLandmarkCatCd=&from=%E7%B7%91%E3%83%B6%E4%B8%98%EF%BC%97%E4%B8%81%E7%9B%AE&fromType=1&to=&toType=&locale=ja&fromlat=&fromlng=&tolat=&tolng=&fromSignpoleKey=8284&routeLayoutCd=&fromBusStopCd=&toBusStopCd=&mapFlag=false&existYn=N&bsid=3",
@@ -188,7 +197,7 @@ function buildList(){
   times().forEach((e,i)=>{
     const note=eN(e);
     const row=document.createElement("div");
-    row.className="r"; row.dataset.i=i;
+    row.className="r"+(isMinor(e)?" minor":""); row.dataset.i=i;
     row.innerHTML=`<span class="t num">${eT(e)}</span>`+
       (note?`<span class="tag">${note}</span>`:`<span class="home">${homeLabel()}</span>`)+
       `<span class="badge">次発</span>`;
@@ -208,8 +217,14 @@ function fmtCD(sec){
 function tick(force){
   const now=new Date(); const nowSec=now.getHours()*3600+now.getMinutes()*60+now.getSeconds();
   const arr=times();
-  let ni=-1;
-  for(let i=0;i<arr.length;i++){if(toSec(eT(arr[i]))>nowSec){ni=i;break;}}
+  let ni=-1, niAny=-1;
+  for(let i=0;i<arr.length;i++){
+    if(toSec(eT(arr[i]))>nowSec){
+      if(niAny<0) niAny=i;
+      if(!isMinor(arr[i])){ ni=i; break; }
+    }
+  }
+  if(ni<0) ni=niAny;   // 主系統が終了していれば通常どおり次発を表示
 
   // next card
   const nx=$("next"), nn=$("nn");
@@ -220,7 +235,9 @@ function tick(force){
       <div class="time num">${eT(e)}</div>
       <div class="meta">${note?note+" 系統":homeLabel()+"ゆき"}</div></div>
       <div class="cd"><b class="num">${fmtCD(toSec(eT(e))-nowSec)}</b><span>後</span></div>`;
-    const af=arr[ni+1];
+    let af=null;
+    for(let i=ni+1;i<arr.length;i++){ if(!isMinor(arr[i])){ af=arr[i]; break; } }
+    if(!af) af=arr[ni+1];
     nn.innerHTML=af?`次々発 <b class="num">${eT(af)}</b>${eN(af)?" ("+eN(af)+")":""}`:"";
   }else{
     nx.className="next done";
