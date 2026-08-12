@@ -51,10 +51,14 @@
   .iconbtn{padding:7px 11px; font-size:14px;}
 
   /* ---- board ---- */
-  #board{width:100%; aspect-ratio:1/1; display:grid;
+  #board{width:100%; margin:0 auto; aspect-ratio:1/1; display:grid;
     grid-template-columns:repeat(9,1fr); grid-template-rows:repeat(9,1fr);
     background:var(--line-strong); border:2.5px solid var(--line-strong);
     border-radius:6px; overflow:hidden; gap:1px;}
+  /* 画面が縦に短い端末では、盤面だけ自動で少し縮めて全体を収める */
+  @supports (height:100dvh){
+    #board{width:min(100%, max(280px, calc(100dvh - 410px)));}
+  }
   .cell{position:relative; background:var(--panel); display:flex;
     align-items:center; justify-content:center; overflow:hidden;}
   .cell.br{margin-right:1px;} .cell.bb{margin-bottom:1px;}
@@ -63,7 +67,7 @@
   .cell.sel{background:var(--sel); box-shadow:inset 0 0 0 2px var(--accent);}
   .cell.bad{background:var(--bad);}
   .cell.wrong{background:var(--wrong);}
-  .val{font-family:var(--font-num); font-size:clamp(18px,5.6vw,30px);
+  .val{font-family:var(--font-num); font-size:clamp(20px,6.3vw,34px);
     font-weight:500; line-height:1; color:var(--user);
     font-feature-settings:"tnum"; letter-spacing:.01em;}
   .cell.given .val{color:var(--given); font-weight:700;}
@@ -71,18 +75,19 @@
     grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr);}
   .notes span{display:flex; align-items:center; justify-content:center;
     font-family:var(--font-num); font-weight:400;
-    font-size:clamp(8.5px,2.5vw,12.5px); color:var(--note); line-height:1;}
+    font-size:clamp(9px,2.7vw,13.5px); color:var(--note); line-height:1;}
   .notes span.hl{color:var(--accent); font-weight:800;}
 
   /* ---- controls ---- */
   #msg{min-height:22px; font-size:13px; padding:5px 3px; line-height:1.35;}
   #msg.ok{color:var(--ok); font-weight:700;}
   #msg.ng{color:#d1453b; font-weight:700;}
-  .pad{display:grid; grid-template-columns:repeat(9,1fr); gap:5px; margin-top:6px;}
-  .pad button{padding:0; height:46px; font-size:22px; font-weight:600;
-    font-family:var(--font-num);
+  .pad{display:grid; grid-template-columns:repeat(10,1fr); gap:7px; margin-top:8px;}
+  .pad button{padding:0; grid-column:span 2; height:60px; font-size:29px; font-weight:600;
+    font-family:var(--font-num); border-radius:11px;
     display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;}
-  .pad button .cnt{font-size:9px; font-weight:400; color:var(--note); line-height:1;}
+  .pad button:nth-child(6){grid-column:2/span 2;}
+  .pad button .cnt{font-size:10px; font-weight:400; color:var(--note); line-height:1;}
   .pad button.done{opacity:.35;}
   .modebar{display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:8px;}
   .modebar button{font-weight:700; padding:11px;}
