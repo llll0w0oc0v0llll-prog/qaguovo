@@ -57,7 +57,11 @@
     border-radius:6px; overflow:hidden; gap:1px;}
   /* 画面が縦に短い端末では、盤面だけ自動で少し縮めて全体を収める */
   @supports (height:100dvh){
-    #board{width:min(100%, max(280px, calc(100dvh - 410px)));}
+    #board{width:min(100%, max(300px, calc(100dvh - 324px)));}
+  }
+  /* svh を使うとアドレスバーの出入りで盤面サイズが揺れない */
+  @supports (height:100svh){
+    #board{width:min(100%, max(300px, calc(100svh - 324px)));}
   }
   .cell{position:relative; background:var(--panel); display:flex;
     align-items:center; justify-content:center; overflow:hidden;}
@@ -79,30 +83,31 @@
   .notes span.hl{color:var(--accent); font-weight:800;}
 
   /* ---- controls ---- */
-  #msg{min-height:22px; font-size:13px; padding:5px 3px; line-height:1.35;}
+  #msg{min-height:19px; font-size:12.5px; padding:4px 3px; line-height:1.3;}
   #msg.ok{color:var(--ok); font-weight:700;}
   #msg.ng{color:#d1453b; font-weight:700;}
-  .pad{display:grid; grid-template-columns:repeat(10,1fr); gap:7px; margin-top:8px;}
-  .pad button{padding:0; grid-column:span 2; height:60px; font-size:29px; font-weight:600;
+  .pad{display:grid; grid-template-columns:repeat(10,1fr); gap:6px; margin-top:7px;}
+  .pad button{padding:0; grid-column:span 2; height:50px; font-size:25px; font-weight:600;
     font-family:var(--font-num); border-radius:11px;
     display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;}
   .pad button:nth-child(6){grid-column:2/span 2;}
   .pad button .cnt{font-size:10px; font-weight:400; color:var(--note); line-height:1;}
   .pad button.done{opacity:.35;}
-  .modebar{display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:8px;}
-  .modebar button{font-weight:700; padding:11px;}
+  .modebar{display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:7px;}
+  .modebar button{font-weight:700; padding:9px;}
   .modebar button.on{background:var(--accent); color:#fff; border-color:var(--accent);}
   .tools{display:grid; grid-template-columns:repeat(4,1fr); gap:5px; margin-top:6px;}
-  .tools button{font-size:13px; padding:10px 2px;}
-  .checks{display:grid; grid-template-columns:repeat(3,1fr); gap:5px; margin-top:6px;}
-  .checks button{font-size:13px; padding:11px 2px;}
+  .tools button{font-size:13px; padding:8px 2px;}
+  .checks{display:grid; grid-template-columns:repeat(3,1fr); gap:5px; margin-top:5px;}
+  .checks button{font-size:13px; padding:9px 2px;}
 
   /* ---- entry phase ---- */
   #entrybar{margin-top:8px; display:none; gap:6px;}
   #entrybar.on{display:flex;}
   #playbar{margin-top:8px; display:none;}
   #playbar.on{display:block;}
-  .hint{font-size:12px; color:var(--note); padding:6px 3px 0; line-height:1.5;}
+  .hint{font-size:11.5px; color:var(--note); padding:5px 3px 0; line-height:1.45;}
+  .hint:empty{display:none;}
 
   /* ---- sheet ---- */
   .mask{position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; z-index:10;}
@@ -524,9 +529,12 @@ function render(){
   $("pname").textContent = p.name + (p.phase==="entry"? "（問題を入力中）":"");
   $("btnUndo").disabled = !undoStack.length;
   $("btnRedo").disabled = !redoStack.length;
+  // 使い方の説明は、まだ手を付けていない間だけ出す（画面を広く使うため）
+  var touched=false;
+  for(var t=0;t<81;t++){ if(p.notes[t] || p.values[t]!==p.givens[t]){ touched=true; break; } }
   $("hint").textContent = (p.phase==="entry")
     ? "新聞などの問題（最初から入っている数字）を入れてください。マスを選んで数字を押します。終わったら「この配置で開始」。"
-    : "マスを選ぶ →「確定」か「メモ」を選んで数字を押します。もう一度同じ数字を押すと消えます。";
+    : (touched ? "" : "マスを選ぶ →「確定」か「メモ」を選んで数字を押します。もう一度同じ数字を押すと消えます。");
 }
 function autoDone(){
   var p=cur();
