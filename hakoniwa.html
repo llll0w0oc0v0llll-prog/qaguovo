@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>箱庭列島 - ひとり用島開発シミュレーション</title>
+<style>
+:root{
+  --bg:#0e1520; --panel:#16202e; --panel2:#1d2a3b; --line:#2c3d54;
+  --tx:#e6edf6; --tx2:#93a6bf; --acc:#4ea8ff; --acc2:#2b7fd4;
+  --ok:#49c98a; --warn:#f0b429; --bad:#f2645a; --gold:#ffd45e;
+  --fontjp:"Hiragino Kaku Gothic ProN","ヒラギノ角ゴ ProN W3","Yu Gothic","游ゴシック体","YuGothic","Meiryo","メイリオ","Noto Sans JP","Noto Sans CJK JP","IPAexGothic",sans-serif;
+  --fontemoji:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji","Noto Emoji",sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;height:100%}
+body{
+  background:var(--bg); color:var(--tx); font-family:var(--fontjp);
+  font-size:15px; line-height:1.5; overscroll-behavior:none;
+  padding-env:0;
+}
+button{font-family:var(--fontjp);font-size:14px;color:var(--tx);cursor:pointer}
+h1,h2,h3{margin:0 0 8px;font-weight:700}
+.hide{display:none !important}
+
+/* ---------- レイアウト ---------- */
+#app{max-width:960px;margin:0 auto;padding:8px 8px 24px}
+.topbar{
+  position:sticky;top:0;z-index:30;background:linear-gradient(180deg,#0e1520 70%,rgba(14,21,32,.85));
+  padding:6px 0 8px;border-bottom:1px solid var(--line);margin-bottom:8px;
+}
+.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:4px 3px;text-align:center;min-width:0}
+.stat .k{font-size:10px;color:var(--tx2);white-space:nowrap}
+.stat .v{font-size:14px;font-weight:700;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stat .d{font-size:9px;color:var(--tx2)}
+.v.up{color:var(--ok)} .v.dn{color:var(--bad)}
+
+.timebar{display:flex;gap:4px;align-items:center;margin-top:6px;flex-wrap:wrap}
+.spd{flex:1;display:flex;gap:3px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:3px}
+.spd button{flex:1;background:transparent;border:0;border-radius:6px;padding:6px 2px;font-size:12px;font-weight:700;color:var(--tx2)}
+.spd button.on{background:var(--acc2);color:#fff}
+.btn{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-weight:700}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--acc2);border-color:var(--acc);color:#fff}
+.btn.ghost{background:transparent}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+
+.tabs{display:flex;gap:4px;margin:8px 0 6px}
+.tabs button{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 4px;font-weight:700;color:var(--tx2);font-size:13px}
+.tabs button.on{background:var(--panel2);color:var(--tx);border-color:var(--acc)}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px}
+.card h3{font-size:13px;color:var(--tx2);letter-spacing:.05em}
+
+/* ---------- マップ ---------- */
+#mapwrap{display:flex;justify-content:center}
+#map{display:grid;gap:2px;width:100%;max-width:520px}
+.cell{
+  position:relative;aspect-ratio:1/1;border-radius:4px;display:flex;
+  align-items:center;justify-content:center;font-family:var(--fontemoji);
+  font-size:clamp(11px,3.6vw,22px);background:#12324f;border:1px solid transparent;
+  user-select:none;overflow:hidden;
+}
+.cell.land{background:#2f4a2c}
+.cell.sea{background:#0f3554}
+.cell.shoal{background:#1c5c86}
+.cell.plain{background:#4a7a3f}
+.cell.waste{background:#6d5c3c}
+.cell.sel{border-color:var(--gold);box-shadow:0 0 0 2px rgba(255,212,94,.45) inset}
+.cell .lv{position:absolute;right:1px;bottom:0;font-family:var(--fontjp);font-size:9px;font-weight:700;color:#fff;text-shadow:0 0 3px #000,0 0 2px #000}
+.cell.hit{animation:hit .5s ease}
+@keyframes hit{0%{filter:brightness(3) saturate(2)}100%{filter:none}}
+
+.legend{display:flex;flex-wrap:wrap;gap:6px;font-size:11px;color:var(--tx2);margin-top:6px;justify-content:center}
+.legend span{white-space:nowrap}
+
+/* ---------- コマンド ---------- */
+.tileinfo{display:flex;align-items:center;gap:8px;margin-bottom:8px;min-height:34px}
+.tileinfo .big{font-family:var(--fontemoji);font-size:26px}
+.tileinfo .t{font-weight:700}
+.tileinfo .s{font-size:12px;color:var(--tx2)}
+.cmds{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:6px}
+.cmd{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:7px 6px;text-align:left;line-height:1.25}
+.cmd .n{font-weight:700;font-size:13px}
+.cmd .c{font-size:10px;color:var(--tx2)}
+.cmd:disabled{opacity:.3}
+.cmd.danger{border-color:#6b3230}
+
+/* ---------- ログ ---------- */
+#log{max-height:210px;overflow-y:auto;font-size:12.5px;-webkit-overflow-scrolling:touch}
+.le{padding:4px 6px;border-left:3px solid var(--line);margin-bottom:3px;background:#131c28;border-radius:0 5px 5px 0}
+.le .t{color:var(--tx2);font-size:10px;margin-right:5px}
+.le.bad{border-left-color:var(--bad)} .le.good{border-left-color:var(--ok)}
+.le.warn{border-left-color:var(--warn)} .le.info{border-left-color:var(--acc)}
+.le.cpu{opacity:.75}
+
+/* ---------- 順位表 ---------- */
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th,td{padding:5px 4px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--tx2);font-size:11px;font-weight:600}
+td.nm,th.nm{text-align:left}
+tr.me{background:rgba(78,168,255,.12)}
+tr.me td{font-weight:700}
+tr.dead{opacity:.4;text-decoration:line-through}
+.bar{height:4px;background:var(--acc);border-radius:2px;margin-top:2px}
+
+/* ---------- モーダル ---------- */
+.modal{position:fixed;inset:0;background:rgba(6,10,16,.86);z-index:100;display:flex;align-items:center;justify-content:center;padding:12px;overflow-y:auto}
+.sheet{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;max-width:520px;width:100%;max-height:92vh;overflow-y:auto}
+.sheet h1{font-size:22px;text-align:center;letter-spacing:.06em}
+.sheet .sub{text-align:center;color:var(--tx2);font-size:12px;margin-bottom:14px}
+.field{margin-bottom:12px}
+.field>label{display:block;font-size:12px;color:var(--tx2);margin-bottom:5px;font-weight:700}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:5px}
+.opt{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 6px;text-align:center;font-size:12.5px;line-height:1.3}
+.opt.on{border-color:var(--acc);background:var(--acc2);color:#fff;font-weight:700}
+.opt:disabled{opacity:.32}
+.opt small{display:block;font-size:10px;opacity:.8;font-weight:400}
+input[type=text]{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:9px;color:var(--tx);font-family:var(--fontjp);font-size:15px}
+.rowbtn{display:flex;gap:6px;margin-top:6px}
+.rowbtn .btn{flex:1;text-align:center}
+.note{font-size:11px;color:var(--tx2);line-height:1.6}
+.evt{font-family:var(--fontemoji);font-size:44px;text-align:center;display:block;margin-bottom:4px}
+.help h4{margin:12px 0 4px;font-size:13px;color:var(--acc)}
+.help p,.help li{font-size:12.5px;color:#cbd8e8;margin:3px 0}
+.help ul{padding-left:18px;margin:4px 0}
+#toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#0b1220ee;border:1px solid var(--line);border-radius:20px;padding:8px 16px;font-size:13px;z-index:200;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw;text-align:center}
+#toast.on{opacity:1}
+@media(max-width:420px){
+  .stats{grid-template-columns:repeat(3,1fr)}
+  #app{padding:6px 6px 20px}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- ===== 上部ステータス ===== -->
+  <div class="topbar">
+    <div class="stats" id="stats"></div>
+    <div class="timebar">
+      <div class="spd" id="spd">
+        <button data-s="0">停止</button>
+        <button data-s="1">1x</button>
+        <button data-s="2">2x</button>
+        <button data-s="5">5x</button>
+        <button data-s="10">10x</button>
+      </div>
+      <button class="btn primary" id="btnTurn">ターン終了</button>
+      <button class="btn ghost" id="btnMenu">≡</button>
+    </div>
+  </div>
+
+  <!-- ===== マップ ===== -->
+  <div id="mapwrap"><div id="map"></div></div>
+  <div class="legend" id="legend"></div>
+
+  <!-- ===== コマンド ===== -->
+  <div class="card">
+    <div class="tileinfo" id="tileinfo"><span class="s">マスをタップして開発コマンドを選びます</span></div>
+    <div class="cmds" id="cmds"></div>
+  </div>
+
+  <!-- ===== タブ ===== -->
+  <div class="tabs">
+    <button data-tab="log" class="on">📰 ニュース</button>
+    <button data-tab="rank">🏆 順位表</button>
+    <button data-tab="isl">🗺️ 他島を見る</button>
+  </div>
+  <div class="card" id="pane-log"><div id="log"></div></div>
+  <div class="card hide" id="pane-rank"><div id="rank"></div></div>
+  <div class="card hide" id="pane-isl">
+    <div class="opts" id="islSel" style="margin-bottom:8px"></div>
+    <div id="mapwrap2" style="display:flex;justify-content:center"><div id="map2" style="display:grid;gap:2px;width:100%;max-width:420px"></div></div>
+    <div id="islInfo" class="note" style="margin-top:8px;text-align:center"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- ===== タイトル ===== -->
+<div class="modal" id="mTitle">
+  <div class="sheet">
+    <h1>🏝️ 箱 庭 列 島 🏝️</h1>
+    <div class="sub">ひとり用・オフライン島開発シミュレーション</div>
+    <div class="field">
+      <label>島の名前</label>
+      <input type="text" id="inName" value="おだんご島" maxlength="12">
+    </div>
+    <div class="field">
+      <label>マップ規模</label>
+      <div class="opts" id="optSize"></div>
+    </div>
+    <div class="field">
+      <label>ライバル島（CPU）の数</label>
+      <div class="opts" id="optCpu"></div>
+    </div>
+    <div class="field">
+      <label>ゲームの目標</label>
+      <div class="opts" id="optGoal"></div>
+      <div class="note" id="goalNote" style="margin-top:5px"></div>
+    </div>
+    <div class="field">
+      <label>難易度（災害の激しさ）</label>
+      <div class="opts" id="optDiff"></div>
+    </div>
+    <div class="rowbtn">
+      <button class="btn primary" id="btnStart">▶ 開拓を始める</button>
+    </div>
+    <div class="rowbtn">
+      <button class="btn" id="btnLoadT">📂 セーブ読込</button>
+      <button class="btn" id="btnHelpT">❔ 遊び方</button>
+    </div>
+    <input type="file" id="fileIn" accept=".json,application/json" class="hide">
+  </div>
+</div>
+
+<!-- ===== メニュー ===== -->
+<div class="modal hide" id="mMenu">
+  <div class="sheet">
+    <h2>メニュー</h2>
+    <div class="rowbtn"><button class="btn" id="btnPause">⏸ 大災害で自動停止：ON</button></div>
+    <div class="rowbtn"><button class="btn" id="btnSave">💾 セーブを書き出す</button></div>
+    <div class="rowbtn"><button class="btn" id="btnLoad">📂 セーブを読み込む</button></div>
+    <div class="rowbtn"><button class="btn" id="btnHelp">❔ 遊び方</button></div>
+    <div class="rowbtn"><button class="btn" id="btnTitle">🏝️ タイトルへ戻る</button></div>
+    <div class="rowbtn"><button class="btn primary" id="btnClose">閉じる</button></div>
+    <p class="note" style="margin-top:10px">セーブはJSONファイルとして端末に保存されます。ブラウザを閉じても、その JSON を読み込めば続きから遊べます。</p>
+  </div>
+</div>
+
+<!-- ===== イベント通知 ===== -->
+<div class="modal hide" id="mEvent">
+  <div class="sheet" style="max-width:400px;text-align:center">
+    <span class="evt" id="evIcon">🌀</span>
+    <h2 id="evTitle" style="text-align:center"></h2>
+    <p id="evBody" style="font-size:13.5px;color:#cbd8e8"></p>
+    <div id="evAct"></div>
+    <div class="rowbtn"><button class="btn primary" id="evOk">了解</button></div>
+  </div>
+</div>
+
+<!-- ===== 結果 ===== -->
+<div class="modal hide" id="mEnd">
+  <div class="sheet" style="text-align:center">
+    <span class="evt" id="endIcon">🏆</span>
+    <h2 id="endTitle" style="text-align:center"></h2>
+    <div id="endBody"></div>
+    <div class="rowbtn">
+      <button class="btn" id="endCont">▶ このまま続ける</button>
+      <button class="btn primary" id="endNew">🏝️ タイトルへ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ヘルプ ===== -->
+<div class="modal hide" id="mHelp">
+  <div class="sheet help">
+    <h2>遊び方</h2>
+    <h4>■ 基本の流れ</h4>
+    <p>マップのマスをタップ → コマンドを選ぶ、を繰り返して島を育てます。コマンドは<b>資金</b>と<b>行動力（AP）</b>を消費します。APは毎ターン回復します。</p>
+    <h4>■ 時間の進め方（ハイブリッド）</h4>
+    <ul>
+      <li><b>ターン終了</b>ボタン … 好きなタイミングで1ターン進めます。</li>
+      <li><b>1x〜10x</b> … 放置しておくと自動でターンが進みます。数字が大きいほど高速。</li>
+      <li><b>⏸</b> … 自動進行を止めます。じっくり考えたいときに。</li>
+      <li>自動進行中でもコマンドは自由に入力できます。</li>
+    </ul>
+    <h4>■ 経済のしくみ</h4>
+    <ul>
+      <li>🌾<b>農場</b>… 食料を生産。食料が尽きると飢饉で人口が激減します。</li>
+      <li>🏭<b>工場</b>… 資金を生産。ただし隣接する農場の生産をわずかに下げます（公害）。</li>
+      <li>🏘️<b>町</b>…人口が住みます。人口は税収とスコアの柱。Lv4以上で🏙️都市に発展。</li>
+      <li>🌲<b>森</b>… 観光収入＋台風被害の軽減。伐採すれば木材収入になります。</li>
+      <li>🧱<b>防波堤</b>… 隣接マスを津波・高潮から守ります。</li>
+    </ul>
+    <h4>■ 災害</h4>
+    <p>毎ターン一定確率で台風・地震・津波・噴火・怪獣・疫病などが発生します。怪獣には資金を払って<b>自衛隊を出動</b>させられます。放置すると毎ターン島を破壊し続けます。</p>
+    <h4>■ CPUの島</h4>
+    <p>ライバル島も同じルールで開発し、同じように災害に遭います。「他島を見る」タブから覗けます。</p>
+    <h4>■ このバージョンについて</h4>
+    <p>軍事（ミサイル・PvPバトルモード）は次バージョン予定のため未実装です。現在は内政と災害でスコアを競います。</p>
+    <div class="rowbtn"><button class="btn primary" id="helpOk">閉じる</button></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* =========================================================
+   箱庭列島 - Core
+   ========================================================= */
+
+/* ---------- 乱数（シード付き） ---------- */
+let _seed = 12345;
+function srand(s){ _seed = (s>>>0) || 1; }
+function rnd(){ // mulberry32
+  _seed |= 0; _seed = (_seed + 0x6D2B79F5) | 0;
+  let t = Math.imul(_seed ^ (_seed>>>15), 1 | _seed);
+  t = (t + Math.imul(t ^ (t>>>7), 61 | t)) ^ t;
+  return ((t ^ (t>>>14))>>>0) / 4294967296;
+}
+const ri = (a,b)=> a + Math.floor(rnd()*(b-a+1));
+const pick = arr => arr[Math.floor(rnd()*arr.length)];
+
+/* ---------- 地形定義 ---------- */
+const T = {
+  sea:    {n:'海',      i:'',   land:false},
+  shoal:  {n:'浅瀬',    i:'',   land:false},
+  waste:  {n:'荒地',    i:'',   land:true},
+  plain:  {n:'平地',    i:'',   land:true},
+  forest: {n:'森',      i:'🌲', land:true},
+  farm:   {n:'農場',    i:'🌾', land:true},
+  factory:{n:'工場',    i:'🏭', land:true},
+  town:   {n:'町',      i:'🏘️', land:true},
+  city:   {n:'都市',    i:'🏙️', land:true},
+  mount:  {n:'山',      i:'⛰️', land:true},
+  levee:  {n:'防波堤',  i:'🧱', land:true},
+  crater: {n:'クレーター',i:'🕳️', land:true},
+};
+const MAXLV = 5;
+
+/* ---------- コマンド定義 ---------- */
+const CMD = [
+  { id:'seichi', n:'整地', cost:20, ap:1, desc:'荒地・森・施設を平地に戻す',
+    cf:(is,t)=> t && t.t==='mount' ? 260 : 20,
+    apf:(is,t)=> t && t.t==='mount' ? 2 : 1,
+    ok:(t)=> ['waste','forest','farm','factory','town','city','levee','crater','mount'].includes(t.t),
+    run:(g,is,x,y,t)=>{ const was=T[t.t].n; t.t='plain'; t.lv=0; t.pop=0; return `${x+1},${y+1} を整地しました（${was}→平地）`; } },
+
+  { id:'umetate', n:'埋め立て', cost:120, ap:2, desc:'海を陸地にする（陸に隣接）',
+    cf:(is)=> 150 + Math.max(0, is.land-25)*22,
+    ok:(t,g,is,x,y)=> (t.t==='sea'||t.t==='shoal') && adjLand(is,x,y)>0,
+    run:(g,is,x,y,t)=>{ t.t='waste'; t.lv=0; return `${x+1},${y+1} の海を埋め立てて荒地にしました`; } },
+
+  { id:'kussaku', n:'掘削', cost:60, ap:1, desc:'陸地を海に戻す',
+    ok:(t)=> ['waste','plain','crater'].includes(t.t),
+    run:(g,is,x,y,t)=>{ t.t='sea'; t.lv=0; t.pop=0; return `${x+1},${y+1} を掘削して海に戻しました`; } },
+
+  { id:'farm', n:'農場', cost:60, ap:1, desc:'食料を生産。Lvを上げると増産',
+    ok:(t)=> t.t==='plain' || t.t==='waste' || (t.t==='farm'&&t.lv<MAXLV),
+    run:(g,is,x,y,t)=>{ if(t.t!=='farm'){t.t='farm';t.lv=1;} else t.lv++;
+      return `${x+1},${y+1} に農場を整備しました（Lv${t.lv}）`; } },
+
+  { id:'fact', n:'工場', cost:130, ap:1, desc:'資金を生産。周囲の農場に公害',
+    ok:(t)=> t.t==='plain' || (t.t==='factory'&&t.lv<MAXLV),
+    run:(g,is,x,y,t)=>{ if(t.t!=='factory'){t.t='factory';t.lv=1;} else t.lv++;
+      return `${x+1},${y+1} に工場を建設しました（Lv${t.lv}）`; } },
+
+  { id:'town', n:'町の開発', cost:100, ap:1, desc:'人口が増える。Lv4で都市に',
+    ok:(t)=> t.t==='plain' || ((t.t==='town'||t.t==='city')&&t.lv<MAXLV),
+    run:(g,is,x,y,t)=>{ if(t.t!=='town'&&t.t!=='city'){t.t='town';t.lv=1;t.pop=80;}
+      else { t.lv++; if(t.lv>=4) t.t='city'; }
+      return `${x+1},${y+1} の${T[t.t].n}を開発しました（Lv${t.lv}）`; } },
+
+  { id:'shinrin', n:'植林', cost:40, ap:1, desc:'観光収入＋台風被害を軽減',
+    ok:(t)=> t.t==='plain'||t.t==='waste',
+    run:(g,is,x,y,t)=>{ t.t='forest'; t.lv=1; return `${x+1},${y+1} に植林しました`; } },
+
+  { id:'bassai', n:'伐採', cost:0, ap:1, desc:'森を切り木材を売る（+120）',
+    ok:(t)=> t.t==='forest',
+    run:(g,is,x,y,t)=>{ t.t='plain'; t.lv=0; is.money += 120; return `${x+1},${y+1} の森を伐採、木材を売却しました（+120）`; } },
+
+  { id:'levee', n:'防波堤', cost:180, ap:1, desc:'沿岸に築き隣接マスを津波から守る',
+    ok:(t,g,is,x,y)=> (t.t==='plain'||t.t==='waste') && is && isCoast(is,x,y),
+    run:(g,is,x,y,t)=>{ t.t='levee'; t.lv=1; return `${x+1},${y+1} に防波堤を築きました`; } },
+];
+
+function costOf(cmd, is, t){ return cmd.cf ? Math.round(cmd.cf(is,t)) : cmd.cost; }
+function apOf(cmd, is, t){ return cmd.apf ? cmd.apf(is,t) : cmd.ap; }
+
+/* ---------- 設定 ---------- */
+const SIZES = {
+  s:{n:'小',w:9, h:9, cpu:3, note:'9×9・さくっと'},
+  m:{n:'中',w:11,h:11,cpu:5, note:'11×11・標準'},
+  l:{n:'大',w:13,h:13,cpu:7, note:'13×13・じっくり'},
+};
+const GOALS = {
+  score:{n:'スコア目標',  note:'先に目標スコアへ到達した島が勝ち'},
+  turn: {n:'規定ターン',  note:'規定ターン終了時のスコア上位が勝ち'},
+  endl: {n:'エンドレス',  note:'勝敗なし。好きなだけ島を育てます'},
+  conq: {n:'制霸',        note:'軍事ユニット実装後（Ver.2）に解禁予定', locked:true},
+};
+const DIFFS = {
+  easy:{n:'のどか', m:0.55, note:'災害ひかえめ'},
+  norm:{n:'ふつう', m:1.0,  note:'標準'},
+  hard:{n:'荒天',   m:1.7,  note:'災害だらけ'},
+};
+const CPUNAMES = ['ラムネ島','こんぺい島','わらび島','みたらし島','あんこ島','きなこ島','ずんだ島','よもぎ島','くずもち島'];
+
+/* ---------- ゲーム状態 ---------- */
+let G = null;
+let sel = null;        // 選択中のマス {x,y}
+let speed = 0;         // 0=停止
+let timer = null;
+let viewIsl = 1;       // 他島ビュー
+let evQueue = [];
+
+/* =========================================================
+   マップ生成
+   ========================================================= */
+function makeIsland(id, name, isPlayer, w, h){
+  const m = [];
+  for(let y=0;y<h;y++){ const row=[]; for(let x=0;x<w;x++) row.push({t:'sea',lv:0,pop:0}); m.push(row); }
+  const cx=(w-1)/2, cy=(h-1)/2, R=Math.min(w,h)/2;
+  // ぐにゃっとした島の輪郭
+  const ph=[rnd()*6.28, rnd()*6.28, rnd()*6.28];
+  for(let y=0;y<h;y++) for(let x=0;x<w;x++){
+    const dx=x-cx, dy=y-cy;
+    const d=Math.sqrt(dx*dx+dy*dy)/R;
+    const a=Math.atan2(dy,dx);
+    const wob = 0.13*Math.sin(a*3+ph[0]) + 0.09*Math.sin(a*5+ph[1]) + 0.06*Math.sin(a*2+ph[2]);
+    const th = 0.58 + wob;
+    if(d < th){
+      const r=rnd();
+      m[y][x].t = r<0.12 ? 'mount' : (r<0.34 ? 'forest' : (r<0.62 ? 'plain' : 'waste'));
+    } else if(d < th+0.14){
+      m[y][x].t = 'shoal';
+    }
+  }
+  const isl = {
+    id, name, isPlayer, w, h, map:m, alive:true,
+    money:1800, food:1200, pop:0, ap:5, score:0,
+    monster:null, hist:[], dead:0,
+    policy: pick(['balanced','industry','agri','expand','balanced']),
+    lastIncome:0, lastFood:0,
+  };
+  // 初期施設
+  const spots = landCells(isl).filter(c=>['plain','waste'].includes(isl.map[c.y][c.x].t));
+  shuffle(spots);
+  for(let k=0;k<2 && spots.length;k++){ const c=spots.pop(); isl.map[c.y][c.x]={t:'town',lv:1,pop:120}; }
+  for(let k=0;k<2 && spots.length;k++){ const c=spots.pop(); isl.map[c.y][c.x]={t:'farm',lv:1,pop:0}; }
+  if(spots.length){ const c=spots.pop(); isl.map[c.y][c.x]={t:'factory',lv:1,pop:0}; }
+  recalc(isl);
+  return isl;
+}
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(rnd()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } }
+function landCells(is){ const r=[]; for(let y=0;y<is.h;y++)for(let x=0;x<is.w;x++) if(T[is.map[y][x].t].land) r.push({x,y}); return r; }
+function allCells(is){ const r=[]; for(let y=0;y<is.h;y++)for(let x=0;x<is.w;x++) r.push({x,y}); return r; }
+function neigh(is,x,y){ const r=[]; for(const[dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){ const nx=x+dx, ny=y+dy;
+  if(nx>=0&&ny>=0&&nx<is.w&&ny<is.h) r.push({x:nx,y:ny,t:is.map[ny][nx]}); } return r; }
+function neigh8(is,x,y){ const r=[]; for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){ if(!dx&&!dy)continue;
+  const nx=x+dx,ny=y+dy; if(nx>=0&&ny>=0&&nx<is.w&&ny<is.h) r.push({x:nx,y:ny,t:is.map[ny][nx]}); } return r; }
+function adjLand(is,x,y){ return neigh(is,x,y).filter(c=>T[c.t.t].land).length; }
+function isCoast(is,x,y){ return neigh(is,x,y).some(c=>c.t.t==='sea'||c.t.t==='shoal'); }
+function count(is,type){ let c=0; for(const r of is.map) for(const t of r) if(t.t===type) c++; return c; }
+function sumLv(is,...types){ let s=0; for(const r of is.map) for(const t of r) if(types.includes(t.t)) s+=t.lv; return s; }
+
+/* =========================================================
+   経済計算
+   ========================================================= */
+function recalc(is){
+  let pop=0;
+  for(const r of is.map) for(const t of r) if(t.t==='town'||t.t==='city') pop += t.pop;
+  is.pop = Math.round(pop);
+  is.land = landCells(is).length;
+  is.score = Math.floor(
+    is.pop/55 + Math.min(is.money,60000)/500 +
+    sumLv(is,'farm')*5 + sumLv(is,'factory')*7 + sumLv(is,'town','city')*9 +
+    count(is,'forest')*3 + is.land*2
+  );
+  return is;
+}
+function foodCap(is){ return 2500 + sumLv(is,'town','city')*260 + count(is,'farm')*220; }
+function foodProduction(is){
+  let f=0;
+  for(let y=0;y<is.h;y++) for(let x=0;x<is.w;x++){
+    const t=is.map[y][x];
+    if(t.t!=='farm') continue;
+    let base = t.lv*58;
+    const pollute = neigh8(is,x,y).filter(c=>c.t.t==='factory').length;
+    base *= Math.max(0.4, 1 - pollute*0.09);
+    if(neigh(is,x,y).some(c=>c.t.t==='sea'||c.t.t==='shoal')) base *= 1.08; // 沿岸ボーナス
+    f += base;
+  }
+  return Math.round(f);
+}
+function moneyIncome(is){
+  let m = sumLv(is,'factory')*46 + is.pop*0.062 + count(is,'forest')*9;
+  m -= count(is,'levee')*4 + sumLv(is,'town','city')*3;
+  return Math.round(m);
+}
+function foodNeed(is){ return Math.round(is.pop*0.06 + 20); }
+
+/* =========================================================
+   ターン処理
+   ========================================================= */
+function stepIsland(is, g, logs){
+  if(!is.alive) return;
+  // --- 生産・消費 ---
+  const prod = foodProduction(is), need = foodNeed(is), inc = moneyIncome(is);
+  is.lastFood = prod - need; is.lastIncome = inc;
+  is.food += prod - need;
+  is.money += inc;
+  if(is.money < 0){ is.money = 0; }
+  // 備蓄限界を超えた食料は輸出して資金に
+  const cap = foodCap(is);
+  if(is.food > cap){
+    const ex = is.food - cap;
+    is.food = cap;
+    is.money += Math.round(ex*0.2);
+    is.exported = Math.round(ex);
+  } else is.exported = 0;
+
+  // --- 人口変動 ---
+  let starve = false;
+  if(is.food < 0){ is.food = 0; starve = true; }
+  for(let y=0;y<is.h;y++) for(let x=0;x<is.w;x++){
+    const t=is.map[y][x];
+    if(t.t!=='town'&&t.t!=='city') continue;
+    const cap = t.lv*(t.t==='city'?520:380);
+    if(starve){ t.pop = Math.max(0, t.pop*0.88); }
+    else {
+      const room = cap - t.pop;
+      if(room>0) t.pop = Math.min(cap, t.pop + Math.max(12, room*0.11));
+      else t.pop = cap;
+    }
+  }
+  if(starve) logs.push({is, k:'bad', s:`食料が尽き、飢饉が発生。人口が減少しています…`});
+
+  // --- 災害 ---
+  disaster(is, g, logs);
+  // --- 怪獣の継続被害 ---
+  if(is.monster) monsterAct(is, g, logs);
+
+  is.ap = 5;
+  recalc(is);
+  is.hist.push(is.score); if(is.hist.length>60) is.hist.shift();
+  if(is.pop<=0 && is.land<=2){ is.alive=false; logs.push({is,k:'bad',s:`${is.name} は壊滅しました…`}); }
+}
+
+/* ---------- 災害テーブル ---------- */
+const EVENTS = [
+  {id:'typhoon', w:24, icon:'🌀', n:'台風', bad:true},
+  {id:'quake',   w:20, icon:'🌐', n:'地震', bad:true},
+  {id:'tsunami', w:12, icon:'🌊', n:'津波', bad:true, major:true},
+  {id:'volcano', w:8,  icon:'🌋', n:'噴火', bad:true, major:true},
+  {id:'monster', w:8,  icon:'👾', n:'怪獣襲来', bad:true, major:true},
+  {id:'plague',  w:9,  icon:'🦠', n:'疫病', bad:true},
+  {id:'meteor',  w:4,  icon:'☄️', n:'隕石落下', bad:true, major:true},
+  {id:'harvest', w:6,  icon:'🌾', n:'豊作', bad:false},
+  {id:'boom',    w:6,  icon:'💰', n:'好景気', bad:false},
+  {id:'migrate', w:4,  icon:'🚢', n:'移民', bad:false},
+];
+function rollEvent(){
+  const tot = EVENTS.reduce((a,e)=>a+e.w,0);
+  let r = rnd()*tot;
+  for(const e of EVENTS){ r-=e.w; if(r<=0) return e; }
+  return EVENTS[0];
+}
+function disaster(is, g, logs){
+  const base = 0.19 * DIFFS[g.diff].m;
+  if(rnd() > base) return;
+  const e = rollEvent();
+  if(e.id==='monster' && is.monster) return; // 重複回避
+  const msg = applyEvent(is, g, e);
+  if(msg) logs.push({is, k:e.bad?'bad':'good', s:msg, icon:e.icon, title:e.n, major:!!e.major});
+}
+function applyEvent(is, g, e){
+  const M = DIFFS[g.diff].m;
+  switch(e.id){
+    case 'typhoon': {
+      const forestRate = count(is,'forest') / Math.max(1,is.land);
+      const power = Math.max(1, Math.round((2 + ri(0,3)) * M * (1-forestRate*0.55)));
+      const cells = landCells(is); shuffle(cells);
+      let hit=0;
+      for(const c of cells.slice(0,power)){
+        const t=is.map[c.y][c.x];
+        if(['farm','town','city','factory'].includes(t.t)){ t.lv=Math.max(1,t.lv-1); if(t.pop) t.pop*=0.85; hit++; flash(is,c); }
+        else if(t.t==='forest'){ t.t='plain'; t.lv=0; hit++; flash(is,c); }
+      }
+      is.food = Math.max(0, Math.round(is.food*0.9));
+      if(!hit) return `台風が接近しましたが、大きな被害はありませんでした`;
+      return `台風が上陸。${hit}か所が被害を受けました${forestRate>0.2?'（森が被害を和らげました）':''}`;
+    }
+    case 'quake': {
+      const power = Math.max(1, Math.round((2 + ri(0,4)) * M));
+      const cells = landCells(is); shuffle(cells);
+      let hit=0, dead=0;
+      for(const c of cells.slice(0,power)){
+        const t=is.map[c.y][c.x];
+        if(t.lv>0){ t.lv--; hit++;
+          if(t.pop){ dead += t.pop*0.12; t.pop*=0.88; }
+          if(t.lv<=0){ t.t = (t.t==='mount')?'mount':'waste'; t.lv=0; t.pop=0; }
+          else if(t.t==='city'&&t.lv<4) t.t='town';
+          flash(is,c);
+        }
+      }
+      if(!hit) return `地震が発生しましたが、被害はありませんでした`;
+      return `地震が発生。${hit}か所が損壊` + (dead>=1?`、約${fmt(dead)}人が犠牲になりました`:'しました');
+    }
+    case 'tsunami': {
+      const cells = landCells(is).filter(c=>isCoast(is,c.x,c.y)); shuffle(cells);
+      const power = Math.max(1, Math.round((2 + ri(0,3)) * M));
+      let hit=0, saved=0;
+      for(const c of cells.slice(0,power)){
+        const t=is.map[c.y][c.x];
+        if(t.t==='levee'){ saved++; continue; }
+        if(neigh(is,c.x,c.y).some(nc=>nc.t.t==='levee')){ saved++; continue; }
+        t.t='shoal'; t.lv=0; t.pop=0; hit++; flash(is,c);
+      }
+      if(!hit && !saved) return null;
+      return `津波が沿岸を襲い、${hit}マスが水没しました${saved?`（防波堤が${saved}マスを守りました）`:''}`;
+    }
+    case 'volcano': {
+      const mts = landCells(is).filter(c=>is.map[c.y][c.x].t==='mount');
+      const c = mts.length? pick(mts) : pick(landCells(is));
+      if(!c) return null;
+      is.map[c.y][c.x].t='mount'; is.map[c.y][c.x].lv=0;
+      let hit=0;
+      for(const nc of neigh8(is,c.x,c.y)){
+        if(!T[nc.t.t].land) continue;
+        if(rnd()<0.7*Math.min(1.4,M)){ nc.t.t='waste'; nc.t.lv=0; nc.t.pop=0; hit++; flash(is,nc); }
+      }
+      return `火山が噴火。溶岩が周囲${hit}マスを焼き払いました`;
+    }
+    case 'meteor': {
+      const c = pick(landCells(is)); if(!c) return null;
+      is.map[c.y][c.x]={t:'crater',lv:0,pop:0}; flash(is,c);
+      for(const nc of neigh(is,c.x,c.y)){ if(T[nc.t.t].land && rnd()<0.5){ nc.t.t='waste'; nc.t.lv=0; nc.t.pop=0; } }
+      return `隕石が落下、${c.x+1},${c.y+1} にクレーターができました`;
+    }
+    case 'plague': {
+      const before=is.pop;
+      for(const r of is.map) for(const t of r) if(t.pop) t.pop*=0.86;
+      recalc(is);
+      return `疫病が流行。人口が ${before.toLocaleString()} → ${is.pop.toLocaleString()} に減少しました`;
+    }
+    case 'monster': {
+      const coast = landCells(is).filter(c=>isCoast(is,c.x,c.y));
+      const c = coast.length? pick(coast) : pick(landCells(is));
+      if(!c) return null;
+      is.monster = {x:c.x, y:c.y, hp:3+Math.round(M), life:5+ri(0,3), name:pick(['ゴジ゛ラもどき','大ダコ','溶岩ワーム','鋼鉄トカゲ','空飛ぶクジラ'])};
+      return `怪獣「${is.monster.name}」が ${c.x+1},${c.y+1} に上陸しました！`;
+    }
+    case 'harvest': { const g2=Math.round(foodProduction(is)*0.8+200); is.food+=g2; return `豊作！ 食料が ${g2} 増えました`; }
+    case 'boom':    { const g2=Math.round(moneyIncome(is)*1.4+300); is.money+=g2; return `好景気！ 資金が ${g2} 増えました`; }
+    case 'migrate': {
+      const towns=[]; for(let y=0;y<is.h;y++)for(let x=0;x<is.w;x++){const t=is.map[y][x]; if(t.t==='town'||t.t==='city') towns.push(t);}
+      if(!towns.length) return null;
+      let add=0; for(const t of towns){ const a=ri(40,140); t.pop+=a; add+=a; }
+      return `移民船が到着。${add}人が島に住み始めました`;
+    }
+  }
+  return null;
+}
+function monsterAct(is, g, logs){
+  const mo = is.monster; if(!mo) return;
+  mo.life--;
+  if(mo.life<=0){ logs.push({is,k:'info',s:`怪獣「${mo.name}」は海へ帰っていきました`}); is.monster=null; return; }
+  // 移動
+  const opts = neigh(is,mo.x,mo.y).filter(c=>T[c.t.t].land);
+  if(opts.length){ const nc=pick(opts); mo.x=nc.x; mo.y=nc.y; }
+  const t = is.map[mo.y][mo.x];
+  if(T[t.t].land && t.t!=='waste'){
+    const was=T[t.t].n; t.t='waste'; t.lv=0; t.pop=0; flash(is,{x:mo.x,y:mo.y});
+    logs.push({is,k:'bad',s:`怪獣「${mo.name}」が ${mo.x+1},${mo.y+1} の${was}を破壊！（残り約${mo.life}ターン）`});
+  }
+}
+
+/* =========================================================
+   CPU AI
+   ========================================================= */
+const POLICY = {
+  balanced:{farm:3,fact:3,town:4,forest:1,ume:1,levee:1},
+  industry:{farm:2,fact:5,town:3,forest:0,ume:1,levee:1},
+  agri:    {farm:5,fact:2,town:3,forest:2,ume:1,levee:1},
+  expand:  {farm:3,fact:2,town:3,forest:1,ume:4,levee:1},
+};
+function cpuTurn(is, g, logs){
+  if(!is.alive) return;
+  let acted = 0;
+  const w = POLICY[is.policy] || POLICY.balanced;
+  while(is.ap>0 && acted<5){
+    const prod=foodProduction(is), need=foodNeed(is);
+    let want;
+    // 緊急判断
+    if(is.food < need*3 || prod < need) want='farm';
+    else if(is.money < 400) want='fact';
+    else {
+      const bag=[];
+      for(const k in w) for(let i=0;i<w[k];i++) bag.push(k);
+      want = pick(bag);
+    }
+    if(!cpuBuild(is, want)) {
+      // フォールバック
+      if(!cpuBuild(is,'farm') && !cpuBuild(is,'town') && !cpuBuild(is,'fact')) break;
+    }
+    acted++;
+  }
+  // 怪獣対応
+  if(is.monster && is.money>1200 && rnd()<0.6){
+    is.money-=900;
+    if(rnd()<0.65){ logs.push({is,k:'info',s:`${is.name} は自衛隊を出動させ、怪獣を撃退しました`}); is.monster=null; }
+  }
+}
+function cpuBuild(is, want){
+  const cells = landCells(is).concat(allCells(is).filter(c=>!T[is.map[c.y][c.x].t].land));
+  shuffle(cells);
+  const cmdOf = {farm:'farm', fact:'fact', town:'town', forest:'shinrin', ume:'umetate', levee:'levee'};
+  const cmd = CMD.find(c=>c.id===cmdOf[want]); if(!cmd) return false;
+  // レベルアップ優先（既存施設を伸ばす方が効率的）
+  const order = cells.slice().sort((a,b)=>{
+    const ta=is.map[a.y][a.x], tb=is.map[b.y][b.x];
+    const sa=(ta.t===({farm:'farm',fact:'factory',town:'town'})[want]||(want==='town'&&ta.t==='city'))?0:1;
+    const sb=(tb.t===({farm:'farm',fact:'factory',town:'town'})[want]||(want==='town'&&tb.t==='city'))?0:1;
+    return sa-sb;
+  });
+  for(const c of order){
+    const t=is.map[c.y][c.x];
+    if(!cmd.ok(t,null,is,c.x,c.y)) continue;
+    const cost=costOf(cmd,is,t), ap=apOf(cmd,is,t);
+    if(is.money < cost + 150) return false; // 予備を残す
+    if(is.ap < ap) return false;
+    is.money -= cost; is.ap -= ap;
+    cmd.run(null, is, c.x, c.y, t);
+    recalc(is);
+    return true;
+  }
+  return false;
+}
+
+/* =========================================================
+   ゲーム進行
+   ========================================================= */
+function newGame(cfg){
+  srand((Date.now()^ (Math.random()*1e9))>>>0);
+  const sz = SIZES[cfg.size];
+  G = {
+    turn:1, cfg, size:cfg.size, goal:cfg.goal, diff:cfg.diff,
+    w:sz.w, h:sz.h, islands:[], log:[], over:false,
+    target: cfg.size==='s'?850 : cfg.size==='m'?1500 : 2300,
+    maxTurn: cfg.size==='s'?60 : cfg.size==='m'?100 : 150,
+    autoPause: true,
+  };
+  G.islands.push(makeIsland(0, cfg.name || 'マイ島', true, sz.w, sz.h));
+  const names = CPUNAMES.slice(); shuffle(names);
+  for(let i=0;i<cfg.cpu;i++) G.islands.push(makeIsland(i+1, names[i]||('CPU'+(i+1)), false, sz.w, sz.h));
+  sel=null; viewIsl = G.islands.length>1?1:0;
+  pushLog('info', `開拓開始！ 目標：${goalText()}`);
+  pushLog('info', `ライバル島：${G.islands.slice(1).map(i=>i.name).join('、')||'なし'}`);
+}
+function goalText(){
+  if(G.goal==='score') return `スコア ${G.target} を先に達成`;
+  if(G.goal==='turn')  return `${G.maxTurn}ターン終了時のスコア1位`;
+  if(G.goal==='endl')  return `エンドレス（勝敗なし）`;
+  return '制霸';
+}
+function nextTurn(){
+  if(!G || G.over && G.goal!=='endl') return;
+  const logs = [];
+  const me = G.islands[0];
+  stepIsland(me, G, logs);
+  for(let i=1;i<G.islands.length;i++){
+    const is=G.islands[i];
+    cpuTurn(is, G, logs);
+    stepIsland(is, G, logs);
+  }
+  G.turn++;
+  // ログ反映
+  const majors = [];
+  for(const l of logs){
+    pushLog(l.k, (l.is.isPlayer?'':`【${l.is.name}】`) + l.s, !l.is.isPlayer);
+    if(l.is.isPlayer && l.major) majors.push(l);
+  }
+  checkEnd();
+  render();
+  if(majors.length && G.autoPause!==false){ showEvent(majors[0]); }
+  else if(majors.length) toast(`${majors[0].icon||'⚠️'} ${majors[0].title}`);
+}
+function checkEnd(){
+  if(G.over) return;
+  const rank = [...G.islands].sort((a,b)=>b.score-a.score);
+  if(G.goal==='score'){
+    const win = rank.find(i=>i.score>=G.target);
+    if(win){ endGame(win); }
+  } else if(G.goal==='turn'){
+    if(G.turn > G.maxTurn){ endGame(rank[0]); }
+  }
+}
+function endGame(win){
+  G.over = true; setSpeed(0);
+  const me = G.islands[0];
+  const rank = [...G.islands].sort((a,b)=>b.score-a.score);
+  const pos = rank.indexOf(me)+1;
+  const wonByMe = win===me;
+  $('#endIcon').textContent = wonByMe?'🏆':'🎌';
+  $('#endTitle').textContent = wonByMe? 'あなたの島が1位です！' : `${win.name} が勝利しました`;
+  $('#endBody').innerHTML =
+    `<p style="font-size:13px;color:#cbd8e8">${G.turn-1}ターン終了時点</p>` +
+    `<div style="margin:8px 0">${rankTable(true)}</div>` +
+    `<p style="font-size:13px">あなたは <b style="font-size:18px;color:var(--gold)">${pos}位</b> / ${G.islands.length}島　スコア <b>${me.score.toLocaleString()}</b></p>`;
+  $('#mEnd').classList.remove('hide');
+}
+
+/* =========================================================
+   プレイヤー操作
+   ========================================================= */
+function doCmd(id){
+  if(!sel) return;
+  const me = G.islands[0];
+  const cmd = CMD.find(c=>c.id===id);
+  const t = me.map[sel.y][sel.x];
+  if(!cmd.ok(t,G,me,sel.x,sel.y)) return toast('ここには実行できません');
+  const cost=costOf(cmd,me,t), ap=apOf(cmd,me,t);
+  if(me.money < cost) return toast(`資金が足りません（${cost}必要）`);
+  if(me.ap < ap) return toast('行動力（AP）が足りません。ターンを終了しましょう');
+  me.money -= cost; me.ap -= ap;
+  const msg = cmd.run(G, me, sel.x, sel.y, t);
+  recalc(me);
+  pushLog('info', msg);
+  render();
+}
+function sendJSDF(){
+  const me = G.islands[0];
+  if(!me.monster) return;
+  const cost = 900;
+  if(me.money<cost) return toast('資金が足りません（900必要）');
+  me.money -= cost;
+  if(rnd()<0.7){ pushLog('good', `自衛隊が怪獣「${me.monster.name}」を撃退しました！`); me.monster=null; }
+  else { me.monster.hp--; pushLog('warn','自衛隊の攻撃は効かなかった…怪獣はまだ暴れています'); }
+  render();
+}
+
+/* =========================================================
+   描画
+   ========================================================= */
+const $ = s=>document.querySelector(s);
+const $$ = s=>[...document.querySelectorAll(s)];
+let flashes = [];
+function flash(is,c){ if(is && is.isPlayer) flashes.push(`${c.x},${c.y}`); }
+
+function fmt(n){ return Math.round(n).toLocaleString('ja-JP'); }
+function render(){
+  if(!G) return;
+  const me = G.islands[0];
+  // ステータス
+  const prod=foodProduction(me), need=foodNeed(me), inc=moneyIncome(me);
+  const rank=[...G.islands].sort((a,b)=>b.score-a.score);
+  $('#stats').innerHTML = [
+    ['ターン', G.goal==='turn'? `${G.turn}/${G.maxTurn}` : G.turn, G.over?'終了':''],
+    ['資金', fmt(me.money), (inc>=0?'+':'')+fmt(inc)+'/T'],
+    ['食料', fmt(me.food), `${(prod-need>=0?'+':'')+fmt(prod-need)}/T　限${fmt(foodCap(me))}`],
+    ['人口', fmt(me.pop), me.land+'マス'],
+    ['スコア', fmt(me.score), G.goal==='score'?`目標${fmt(G.target)}`:`${rank.indexOf(me)+1}位`],
+    ['行動力', me.ap+'/5', 'AP'],
+  ].map(([k,v,d])=>{
+    let cls='';
+    if(k==='食料' && prod-need<0) cls='dn';
+    if(k==='資金' && inc<0) cls='dn';
+    return `<div class="stat"><div class="k">${k}</div><div class="v ${cls}">${v}</div><div class="d">${d||''}</div></div>`;
+  }).join('');
+
+  drawMap($('#map'), me, true);
+  drawTileInfo();
+  drawCmds();
+  drawRank();
+  drawIslView();
+  $$('#spd button').forEach(b=> b.classList.toggle('on', +b.dataset.s===speed));
+  $('#btnTurn').disabled = G.over && G.goal!=='endl';
+}
+function drawMap(el, is, interactive){
+  el.style.gridTemplateColumns = `repeat(${is.w},1fr)`;
+  let html='';
+  for(let y=0;y<is.h;y++) for(let x=0;x<is.w;x++){
+    const t=is.map[y][x];
+    const info=T[t.t];
+    const isSel = interactive && sel && sel.x===x && sel.y===y;
+    const mon = is.monster && is.monster.x===x && is.monster.y===y;
+    const fl = flashes.includes(`${x},${y}`) && interactive;
+    const cls = info.land ? (t.t==='plain'?'land plain':(t.t==='waste'?'land waste':'land'))
+                          : (t.t==='shoal'?'shoal':'sea');
+    html += `<div class="cell ${cls} ${isSel?'sel':''} ${fl?'hit':''}"
+      ${interactive?`data-x="${x}" data-y="${y}"`:''}>${mon?'👾':info.i}` +
+      `${t.lv>0 && ['farm','factory','town','city'].includes(t.t)?`<span class="lv">${t.lv}</span>`:''}</div>`;
+  }
+  el.innerHTML = html;
+  if(interactive) flashes = [];
+}
+function drawTileInfo(){
+  const me=G.islands[0];
+  const box=$('#tileinfo');
+  if(me.monster && (!sel || (sel.x!==me.monster.x||sel.y!==me.monster.y))){
+    // 怪獣警告を常時出す
+  }
+  if(!sel){
+    box.innerHTML = `<span class="s">マスをタップして開発コマンドを選びます</span>`;
+  } else {
+    const t=me.map[sel.y][sel.x];
+    const extra = [];
+    if(['farm','factory','town','city'].includes(t.t)) extra.push(`Lv${t.lv}`);
+    if(t.pop>0) extra.push(`人口 ${fmt(t.pop)}`);
+    if(t.t==='farm') extra.push(`食料 +${Math.round(t.lv*58)}`);
+    if(t.t==='factory') extra.push(`資金 +${t.lv*46}`);
+    if(isCoast(me,sel.x,sel.y) && T[t.t].land) extra.push('沿岸');
+    box.innerHTML = `<span class="big">${T[t.t].i}</span><div><div class="t">${T[t.t].n}　<span class="s">(${sel.x+1}, ${sel.y+1})</span></div><div class="s">${extra.join('　/　')||'－'}</div></div>`;
+  }
+  // 怪獣ボタン
+}
+function drawCmds(){
+  const me=G.islands[0];
+  const c=$('#cmds');
+  let html='';
+  if(me.monster){
+    html += `<button class="cmd danger" id="cmdJSDF"><div class="n">🚁 自衛隊出動</div><div class="c">900　怪獣を撃退(70%)</div></button>`;
+  }
+  for(const cmd of CMD){
+    let ok = !!sel, t = sel ? me.map[sel.y][sel.x] : null;
+    if(sel) ok = cmd.ok(t,G,me,sel.x,sel.y);
+    const cost=costOf(cmd,me,t), ap=apOf(cmd,me,t);
+    const afford = me.money>=cost && me.ap>=ap;
+    html += `<button class="cmd" data-cmd="${cmd.id}" ${(!ok||!afford)?'disabled':''}>
+      <div class="n">${cmd.n}</div><div class="c">💰${cost} / AP${ap}<br>${cmd.desc}</div></button>`;
+  }
+  c.innerHTML = html;
+}
+function rankTable(compact){
+  const rank=[...G.islands].sort((a,b)=>b.score-a.score);
+  const max = Math.max(1, rank[0].score);
+  let h = `<table><tr><th class="nm">島</th><th>スコア</th><th>人口</th><th>資金</th><th>面積</th></tr>`;
+  rank.forEach((is,i)=>{
+    h += `<tr class="${is.isPlayer?'me':''} ${is.alive?'':'dead'}">
+      <td class="nm">${i+1}. ${is.isPlayer?'★':''}${is.name}${is.monster?' 👾':''}
+        <div class="bar" style="width:${Math.round(is.score/max*100)}%"></div></td>
+      <td>${fmt(is.score)}</td><td>${fmt(is.pop)}</td><td>${fmt(is.money)}</td><td>${is.land}</td></tr>`;
+  });
+  return h+`</table>`;
+}
+function drawRank(){ $('#rank').innerHTML = rankTable(); }
+function drawIslView(){
+  const sels=$('#islSel');
+  sels.innerHTML = G.islands.map((is,i)=>
+    `<button class="opt ${i===viewIsl?'on':''}" data-isl="${i}">${is.isPlayer?'★':''}${is.name}</button>`).join('');
+  const is=G.islands[viewIsl];
+  if(is){
+    drawMap($('#map2'), is, false);
+    $('#islInfo').innerHTML = `スコア <b>${fmt(is.score)}</b>　人口 ${fmt(is.pop)}　資金 ${fmt(is.money)}　食料 ${fmt(is.food)}　面積 ${is.land}` +
+      (is.isPlayer?'':`<br>方針：${({balanced:'バランス型',industry:'工業重視',agri:'農業重視',expand:'拡張重視'})[is.policy]}`) +
+      (is.monster?`<br><span style="color:var(--bad)">👾 怪獣「${is.monster.name}」が暴れています</span>`:'');
+  }
+}
+function pushLog(k, s, cpu){
+  G.log.unshift({t:G.turn, k, s, cpu});
+  if(G.log.length>200) G.log.pop();
+  const el=$('#log');
+  if(el) el.innerHTML = G.log.map(l=>`<div class="le ${l.k} ${l.cpu?'cpu':''}"><span class="t">T${l.t}</span>${l.s}</div>`).join('');
+}
+function toast(m){
+  const t=$('#toast'); t.textContent=m; t.classList.add('on');
+  clearTimeout(t._x); t._x=setTimeout(()=>t.classList.remove('on'),1600);
+}
+function showEvent(l){
+  $('#evIcon').textContent = l.icon||'⚠️';
+  $('#evTitle').textContent = l.title||'イベント';
+  $('#evBody').textContent = l.s;
+  const act=$('#evAct');
+  const me=G.islands[0];
+  if(me.monster){
+    act.innerHTML = `<div class="rowbtn"><button class="btn danger" id="evJSDF" style="border-color:#6b3230">🚁 自衛隊を出動（900）</button></div>`;
+    $('#evJSDF').onclick = ()=>{ sendJSDF(); $('#mEvent').classList.add('hide'); };
+  } else act.innerHTML='';
+  $('#mEvent').classList.remove('hide');
+  if(speed>0){ G._resume=speed; setSpeed(0); }
+}
+
+/* =========================================================
+   時間（ハイブリッド）
+   ========================================================= */
+const BASE_MS = 5000;
+function setSpeed(s){
+  speed = s;
+  if(timer){ clearTimeout(timer); timer=null; }
+  if(s>0) loop();
+  $$('#spd button').forEach(b=> b.classList.toggle('on', +b.dataset.s===speed));
+}
+function loop(){
+  if(speed<=0) return;
+  timer = setTimeout(()=>{
+    if(speed<=0) return;
+    if(!G.over || G.goal==='endl') nextTurn();
+    else { setSpeed(0); return; }
+    loop();
+  }, BASE_MS/speed);
+}
+
+/* =========================================================
+   セーブ / ロード
+   ========================================================= */
+function saveGame(){
+  const data = JSON.stringify({v:1, G}, null, 0);
+  const blob = new Blob([data], {type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`hakoniwa_${G.islands[0].name}_T${G.turn}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+  toast('セーブファイルを書き出しました');
+}
+function loadGame(file){
+  const fr=new FileReader();
+  fr.onload = ()=>{
+    try{
+      const d=JSON.parse(fr.result);
+      if(!d.G || !d.G.islands) throw 0;
+      G=d.G; sel=null; viewIsl=G.islands.length>1?1:0;
+      $('#mTitle').classList.add('hide'); $('#mMenu').classList.add('hide');
+      setSpeed(0); render();
+      $('#log').innerHTML = G.log.map(l=>`<div class="le ${l.k} ${l.cpu?'cpu':''}"><span class="t">T${l.t}</span>${l.s}</div>`).join('');
+      toast('セーブを読み込みました');
+    }catch(e){ toast('セーブファイルを読み込めませんでした'); }
+  };
+  fr.readAsText(file);
+}
+
+/* =========================================================
+   タイトル画面 UI
+   ========================================================= */
+const cfg = {name:'おだんご島', size:'m', cpu:5, goal:'score', diff:'norm'};
+function buildTitle(){
+  $('#optSize').innerHTML = Object.entries(SIZES).map(([k,v])=>
+    `<button class="opt ${cfg.size===k?'on':''}" data-k="size" data-v="${k}">${v.n}<small>${v.note}</small></button>`).join('');
+  $('#optCpu').innerHTML = [1,3,5,7].map(n=>
+    `<button class="opt ${cfg.cpu===n?'on':''}" data-k="cpu" data-v="${n}">${n}島</button>`).join('');
+  $('#optGoal').innerHTML = Object.entries(GOALS).map(([k,v])=>
+    `<button class="opt ${cfg.goal===k?'on':''}" data-k="goal" data-v="${k}" ${v.locked?'disabled':''}>${v.n}${v.locked?'<small>🔒Ver.2</small>':''}</button>`).join('');
+  $('#optDiff').innerHTML = Object.entries(DIFFS).map(([k,v])=>
+    `<button class="opt ${cfg.diff===k?'on':''}" data-k="diff" data-v="${k}">${v.n}<small>${v.note}</small></button>`).join('');
+  $('#goalNote').textContent = GOALS[cfg.goal].note;
+}
+document.addEventListener('click', e=>{
+  const opt = e.target.closest('.opt[data-k]');
+  if(opt && !opt.disabled){
+    const k=opt.dataset.k; let v=opt.dataset.v;
+    if(k==='cpu') v=+v;
+    cfg[k]=v; buildTitle(); return;
+  }
+  const cell = e.target.closest('.cell[data-x]');
+  if(cell){ sel={x:+cell.dataset.x, y:+cell.dataset.y}; render(); return; }
+  const cmd = e.target.closest('.cmd[data-cmd]');
+  if(cmd && !cmd.disabled){ doCmd(cmd.dataset.cmd); return; }
+  const isl = e.target.closest('.opt[data-isl]');
+  if(isl){ viewIsl=+isl.dataset.isl; drawIslView(); return; }
+});
+$('#cmds').addEventListener('click', e=>{
+  if(e.target.closest('#cmdJSDF')) sendJSDF();
+});
+$$('#spd button').forEach(b=> b.onclick = ()=> setSpeed(+b.dataset.s));
+$('#btnTurn').onclick = ()=> { if(!G.over||G.goal==='endl') nextTurn(); };
+$('#btnMenu').onclick = ()=>{ syncPauseBtn(); $('#mMenu').classList.remove('hide'); };
+function syncPauseBtn(){ if(G) $('#btnPause').textContent = `⏸ 大災害で自動停止：${G.autoPause!==false?'ON':'OFF'}`; }
+$('#btnPause').onclick = ()=>{ if(!G) return; G.autoPause = !(G.autoPause!==false); syncPauseBtn(); };
+$('#btnClose').onclick = ()=> $('#mMenu').classList.add('hide');
+$('#btnSave').onclick = saveGame;
+$('#btnLoad').onclick = ()=> $('#fileIn').click();
+$('#btnLoadT').onclick = ()=> $('#fileIn').click();
+$('#fileIn').onchange = e=>{ if(e.target.files[0]) loadGame(e.target.files[0]); e.target.value=''; };
+$('#btnHelp').onclick = ()=> $('#mHelp').classList.remove('hide');
+$('#btnHelpT').onclick = ()=> $('#mHelp').classList.remove('hide');
+$('#helpOk').onclick = ()=> $('#mHelp').classList.add('hide');
+$('#btnTitle').onclick = ()=>{ setSpeed(0); $('#mMenu').classList.add('hide'); $('#mTitle').classList.remove('hide'); };
+$('#evOk').onclick = ()=>{
+  $('#mEvent').classList.add('hide');
+  if(G && G._resume){ const s=G._resume; G._resume=0; setSpeed(s); }
+};
+$('#endCont').onclick = ()=>{ $('#mEnd').classList.add('hide'); G.goal='endl'; render(); toast('エンドレスモードで続行します'); };
+$('#endNew').onclick = ()=>{ $('#mEnd').classList.add('hide'); $('#mTitle').classList.remove('hide'); };
+$('#btnStart').onclick = ()=>{
+  cfg.name = $('#inName').value.trim() || 'マイ島';
+  newGame({...cfg});
+  $('#mTitle').classList.add('hide');
+  setSpeed(0);
+  render();
+};
+$$('.tabs button').forEach(b=> b.onclick = ()=>{
+  $$('.tabs button').forEach(x=>x.classList.toggle('on', x===b));
+  ['log','rank','isl'].forEach(t=> $('#pane-'+t).classList.toggle('hide', t!==b.dataset.tab));
+});
+
+/* 凡例 */
+const SW = (c)=>`<i style="display:inline-block;width:11px;height:11px;border-radius:2px;background:${c};vertical-align:-1px;margin-right:2px"></i>`;
+$('#legend').innerHTML = SW('#0f3554')+'海 '+SW('#1c5c86')+'浅瀬 '+SW('#4a7a3f')+'平地 '+SW('#6d5c3c')+'荒地 ' +
+  ['forest','farm','factory','town','city','mount','levee','crater']
+  .map(k=>`<span>${T[k].i}${T[k].n}</span>`).join('') + '<span>👾怪獣</span>';
+
+buildTitle();
+</script>
+</body>
+</html>
