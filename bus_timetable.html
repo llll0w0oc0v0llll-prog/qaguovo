@@ -77,8 +77,13 @@
   @media (max-width:360px){ #ov-list{grid-template-columns:1fr} }
 
   .ov-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 12px;min-width:0}
-  .ov-card .name{font-size:12px;font-weight:800;color:var(--ink);margin-bottom:7px;cursor:pointer;
+  .ov-card .name-row{display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:7px}
+  .ov-card .name{font-size:12px;font-weight:800;color:var(--ink);cursor:pointer;
     line-height:1.35;overflow-wrap:anywhere}
+  .ov-card .goto{flex:none;border:1px solid var(--line);background:#fff;color:var(--brand);
+    font-weight:800;font-size:13px;width:22px;height:22px;min-width:22px;border-radius:7px;line-height:1;
+    cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+  .ov-card .goto:active{background:var(--line2)}
   .ov-card .none{font-size:12px;color:var(--sub)}
   .ov-card .next-row{display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap}
   .ov-card .next-row .toprow{display:flex;align-items:baseline;gap:4px;flex:none;min-width:0}
@@ -332,7 +337,7 @@ function buildOverview(){
     const upcoming=arr.filter(e=>toSec(eT(e))>nowSec);
     const card=document.createElement("div");
     card.className="ov-card";
-    let html=`<div class="name">${key}</div>`;
+    let html=`<div class="name-row"><span class="name">${key}</span><button class="goto" type="button" aria-label="${key}の詳細を見る">›</button></div>`;
     if(!arr.length){
       html+=`<div class="none">この曜日は運行がありません</div>`;
     }else if(!upcoming.length){
@@ -355,11 +360,13 @@ function buildOverview(){
       }
     }
     card.innerHTML=html;
-    card.querySelector(".name").onclick=()=>{
+    const goto=()=>{
       stop=key; $("stop").value=key;
       try{localStorage.setItem("busStop",stop);}catch(e){}
       setView("stop"); updateLive(); buildList(); tick(true);
     };
+    card.querySelector(".name").onclick=goto;
+    card.querySelector(".goto").onclick=goto;
     ov.appendChild(card);
   });
 }
