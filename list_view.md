@@ -11,7 +11,7 @@ GitHub上のHTMLファイルを直接開くのではなく、**GitHub Pagesで�
 | No. | ページ名 | ページ概要 | Webページ |
 |---:|---|---|---|
 | 1 | バス時刻表ツール | 最終更新：2026/08/22 | [▶ 開く](https://llll0w0oc0v0llll-prog.github.io/qaguovo/bus_timetable.html) |
-| 2 | Ｇ検定勉強ツール | 最終更新：2026/08/16 | [▶ 開く](https://llll0w0oc0v0llll-prog.github.io/qaguovo/gtest practice.html) |
+| 2 | Ｇ検定勉強ツール | 最終更新：2026/08/16 | [▶ 開く](https://llll0w0oc0v0llll-prog.github.io/qaguovo/gtest_practice.html) |
 | 3 | 箱庭諸島ゲーム | 最終更新：2026/08/12 | [▶ 開く](https://llll0w0oc0v0llll-prog.github.io/qaguovo/hakoniwa.html) |
 | 4 | 引越し管理ツール | 最終更新：2026/07/08 | [▶ 開く](https://llll0w0oc0v0llll-prog.github.io/qaguovo/hikkoshi-manager.html) |
 | 5 | レイアウトツール | 最終更新：2026/07/11 | [▶ 開く](https://llll0w0oc0v0llll-prog.github.io/qaguovo/room-layout-planner.html) |
