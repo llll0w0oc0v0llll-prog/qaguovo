@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="qaguovo Webページ一覧">
+  <title>Webページ一覧 | qaguovo</title>
+  <style>
+    :root {
+      --bg: #f5f7fa;
+      --surface: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --accent: #2563eb;
+      --accent-soft: #eff6ff;
+      --shadow: 0 4px 14px rgba(15, 23, 42, .07);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                   "Hiragino Kaku Gothic ProN", "Hiragino Sans",
+                   "Yu Gothic", Meiryo, sans-serif;
+      line-height: 1.6;
+    }
+
+    a { color: inherit; }
+
+    .container {
+      width: min(100% - 32px, 980px);
+      margin: 0 auto;
+    }
+
+    header {
+      padding: 48px 0 28px;
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--accent);
+      font-size: .85rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3rem);
+      letter-spacing: -.03em;
+    }
+
+    .lead {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .section-title {
+      margin: 28px 0 14px;
+      font-size: 1.25rem;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .card {
+      position: relative;
+      display: flex;
+      align-items: center;
+      min-height: 104px;
+      padding: 18px 18px 18px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      text-decoration: none;
+      transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      border-color: #bfdbfe;
+      box-shadow: 0 8px 22px rgba(15, 23, 42, .10);
+    }
+
+    .card-no {
+      width: 28px;
+      color: #9ca3af;
+      font-size: .8rem;
+      text-align: center;
+    }
+
+    .card-icon {
+      width: 48px;
+      margin: 0 14px;
+      font-size: 1.9rem;
+      text-align: center;
+    }
+
+    .card-body {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .card h2 {
+      margin: 0;
+      padding-right: 20px;
+      font-size: 1.05rem;
+    }
+
+    .card p {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: .82rem;
+    }
+
+    .arrow {
+      color: var(--accent);
+      font-size: 1.3rem;
+      font-weight: 700;
+    }
+
+    .panel {
+      margin-top: 32px;
+      padding: 22px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+
+    .panel h2 {
+      margin: 0 0 10px;
+      font-size: 1.1rem;
+    }
+
+    .panel p {
+      margin: 7px 0;
+      color: var(--muted);
+    }
+
+    .panel ol {
+      margin: 10px 0 0;
+      padding-left: 1.4rem;
+    }
+
+    .top-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .top-link:hover {
+      background: #dbeafe;
+    }
+
+    code {
+      padding: 2px 5px;
+      border-radius: 5px;
+      background: #f3f4f6;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: .9em;
+    }
+
+    pre {
+      overflow-x: auto;
+      margin: 12px 0 0;
+      padding: 14px;
+      border-radius: 10px;
+      background: #111827;
+      color: #e5e7eb;
+      font-size: .85rem;
+      line-height: 1.5;
+    }
+
+    footer {
+      padding: 34px 0 48px;
+      color: var(--muted);
+      font-size: .82rem;
+      text-align: center;
+    }
+
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    @media (max-width: 700px) {
+      .container { width: min(100% - 22px, 980px); }
+      header { padding-top: 32px; }
+      .cards { grid-template-columns: 1fr; }
+      .card { min-height: 92px; }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="container">
+    <header>
+      <p class="eyebrow">qaguovo / Web Portal</p>
+      <h1>Webページ一覧</h1>
+      <p class="lead">このリポジトリで管理しているWebページへのリンク集です。<br>
+      GitHub Pagesで公開されている実際のWebページへ移動できます。</p>
+    </header>
+
+    <section aria-labelledby="pages-title">
+      <h2 id="pages-title" class="section-title">🌐 Webページ</h2>
+      <div class="cards">
+        <a class="card" href="https://llll0w0oc0v0llll-prog.github.io/qaguovo/bus_timetable.html" target="_blank" rel="noopener">
+          <div class="card-no">1</div>
+          <div class="card-icon">🚌</div>
+          <div class="card-body">
+            <h2>バス時刻表ツール</h2>
+            <p>最終更新：2026/08/22</p>
+          </div>
+          <div class="arrow">↗</div>
+        </a>
+        <a class="card" href="https://llll0w0oc0v0llll-prog.github.io/qaguovo/gtest_practice.html" target="_blank" rel="noopener">
+          <div class="card-no">2</div>
+          <div class="card-icon">🧠</div>
+          <div class="card-body">
+            <h2>Ｇ検定勉強ツール</h2>
+            <p>最終更新：2026/08/16</p>
+          </div>
+          <div class="arrow">↗</div>
+        </a>
+        <a class="card" href="https://llll0w0oc0v0llll-prog.github.io/qaguovo/hakoniwa.html" target="_blank" rel="noopener">
+          <div class="card-no">3</div>
+          <div class="card-icon">🎮</div>
+          <div class="card-body">
+            <h2>箱庭諸島ゲーム</h2>
+            <p>最終更新：2026/08/12</p>
+          </div>
+          <div class="arrow">↗</div>
+        </a>
+        <a class="card" href="https://llll0w0oc0v0llll-prog.github.io/qaguovo/hikkoshi-manager.html" target="_blank" rel="noopener">
+          <div class="card-no">4</div>
+          <div class="card-icon">📦</div>
+          <div class="card-body">
+            <h2>引越し管理ツール</h2>
+            <p>最終更新：2026/07/08</p>
+          </div>
+          <div class="arrow">↗</div>
+        </a>
+        <a class="card" href="https://llll0w0oc0v0llll-prog.github.io/qaguovo/room-layout-planner.html" target="_blank" rel="noopener">
+          <div class="card-no">5</div>
+          <div class="card-icon">🏠</div>
+          <div class="card-body">
+            <h2>レイアウトツール</h2>
+            <p>最終更新：2026/07/11</p>
+          </div>
+          <div class="arrow">↗</div>
+        </a>
+        <a class="card" href="https://llll0w0oc0v0llll-prog.github.io/qaguovo/sudoku-memo.html" target="_blank" rel="noopener">
+          <div class="card-no">6</div>
+          <div class="card-icon">🔢</div>
+          <div class="card-body">
+            <h2>数独検算ツール</h2>
+            <p>最終更新：2026/08/12</p>
+          </div>
+          <div class="arrow">↗</div>
+        </a>
+        <a class="card" href="https://llll0w0oc0v0llll-prog.github.io/qaguovo/" target="_blank" rel="noopener">
+          <div class="card-no">7</div>
+          <div class="card-icon">📄</div>
+          <div class="card-body">
+            <h2>ページ7</h2>
+            <p>最終更新：</p>
+          </div>
+          <div class="arrow">↗</div>
+        </a>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="top-title">
+      <h2 id="top-title">🏠 トップページ</h2>
+      <p>GitHub Pagesで公開しているWebサイトのトップページです。</p>
+      <a class="top-link" href="https://llll0w0oc0v0llll-prog.github.io/qaguovo/" target="_blank" rel="noopener">
+        Webサイトのトップページを開く ↗
+      </a>
+    </section>
+
+    <section class="panel" aria-labelledby="add-title">
+      <h2 id="add-title">➕ ページを追加するとき</h2>
+      <p>新しいHTMLページを追加した場合は、このHTMLファイルの「Webページ」一覧にカードを1つ追加してください。</p>
+      <p>ページ数が増えても同じ形式で追記できるようにしています。</p>
+      <pre>&lt;a class="card" href="HTML_PAGE_URL" target="_blank" rel="noopener"&gt;
+  ...
+&lt;/a&gt;</pre>
+    </section>
+
+    <section class="panel" aria-labelledby="update-title">
+      <h2 id="update-title">🔧 更新手順</h2>
+      <ol>
+        <li>HTML・CSS・JavaScript等のファイルを修正</li>
+        <li>GitHubリポジトリへアップロード・コミット</li>
+        <li>GitHub Pagesへの反映を待つ</li>
+        <li>このページから対象ページを開く</li>
+        <li>実際のWebページで変更内容を確認</li>
+      </ol>
+    </section>
+
+    <section class="panel" aria-labelledby="rules-title">
+      <h2 id="rules-title">📝 管理ルール</h2>
+      <ul>
+        <li>リンク先にはGitHub上のHTMLファイルではなく、GitHub Pagesの公開URLを登録する</li>
+        <li>ページを追加・削除した場合は、この一覧も更新する</li>
+        <li>ページのURLを変更した場合は、この一覧のURLも更新する</li>
+        <li>ページ数が増えても、原則としてこの一覧に追記して管理する</li>
+      </ul>
+    </section>
+
+    <footer>
+      <a href="https://github.com/llll0w0oc0v0llll-prog/qaguovo" target="_blank" rel="noopener">GitHubリポジトリを開く ↗</a>
+    </footer>
+  </main>
+</body>
+</html>
