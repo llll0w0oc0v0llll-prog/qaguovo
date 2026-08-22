@@ -54,36 +54,77 @@
   .r.now{background:#eaf2fb}
   .r .t{font-size:17px;font-weight:800;width:64px;flex:none}
   .r.now .t{color:var(--next)}
-  .r .tag{font-size:11px;font-weight:800;color:var(--tag);background:rgba(192,57,43,.09);
+  .r .tag{font-size:10px;font-weight:800;color:var(--tag);background:rgba(192,57,43,.09);
     padding:2px 7px;border-radius:6px}
   .r .home{font-size:11px;color:var(--sub)}
   .r.minor{padding:6px 15px}
   .r.minor .t{font-size:13px;font-weight:600;color:var(--sub);width:64px}
-  .r.minor .tag{font-size:9.5px;font-weight:700;color:#96a0aa;background:rgba(120,132,145,.10)}
+  .r.minor .tag{font-size:9px;font-weight:700;color:#96a0aa;background:rgba(120,132,145,.10)}
   .r.minor.now{background:#f2f5f7}
   .r.minor.now .t{color:var(--sub)}
   .r .badge{margin-left:auto;font-size:10px;font-weight:800;color:var(--next);letter-spacing:.12em;visibility:hidden}
   .r.now .badge{visibility:visible}
   .foot{margin-top:14px;font-size:11px;color:var(--sub);line-height:1.7}
+
+  .tabbar{display:flex;gap:0;margin-bottom:14px;background:var(--line2);border:1px solid var(--line);
+    border-radius:10px;padding:3px}
+  .tabbar button{flex:1;border:0;background:transparent;color:var(--sub);font:inherit;font-weight:800;
+    font-size:14px;padding:10px 0;border-radius:7px;cursor:pointer}
+  .tabbar button[aria-pressed="true"]{background:#fff;color:var(--brand);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+  .hidden{display:none !important}
+
+  #ov-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+  @media (max-width:360px){ #ov-list{grid-template-columns:1fr} }
+
+  .ov-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 12px;min-width:0}
+  .ov-card .name{font-size:12px;font-weight:800;color:var(--ink);margin-bottom:7px;cursor:pointer;
+    line-height:1.35;overflow-wrap:anywhere}
+  .ov-card .none{font-size:12px;color:var(--sub)}
+  .ov-card .next-row{display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap}
+  .ov-card .next-row .toprow{display:flex;align-items:baseline;gap:4px;flex:none;min-width:0}
+  .ov-card .next-row .t{font-size:20px;font-weight:800;line-height:1.1;color:var(--ink);white-space:nowrap}
+  .ov-card .next-row .tag{font-size:8px;font-weight:800;color:var(--tag);background:rgba(192,57,43,.09);
+    padding:1px 4px;border-radius:5px;align-self:center;white-space:nowrap}
+  .ov-card .next-row .cd{white-space:nowrap;margin-left:auto;text-align:right}
+  .ov-card .next-row .cd b{font-size:18px;font-weight:800;color:var(--next)}
+  .ov-card .next-row .cd span{font-size:9.5px;color:var(--sub);margin-left:2px}
+  .ov-card .more{display:flex;flex-wrap:wrap;gap:5px 9px;margin-top:7px;padding-top:7px;border-top:1px solid var(--line2)}
+  .ov-card .more .item{display:flex;align-items:baseline;gap:3px;white-space:nowrap}
+  .ov-card .more .t{font-size:12px;font-weight:700;color:var(--sub)}
+  .ov-card .more .tag{font-size:8px;font-weight:700;color:#96a0aa;background:rgba(120,132,145,.10);
+    padding:1px 4px;border-radius:5px}
 </style>
 </head>
 <body>
 <header>伊丹・宝塚 バス時刻表</header>
 <div class="wrap">
+  <div class="tabbar" role="group" aria-label="画面切替">
+    <button id="tab-overview" aria-pressed="false">一覧</button>
+    <button id="tab-stop" aria-pressed="false">停留所選択</button>
+  </div>
+
   <div class="controls">
-    <label class="lbl" for="stop">停留所・方面</label>
-    <select id="stop"></select>
+    <div id="stop-picker">
+      <label class="lbl" for="stop">停留所・方面</label>
+      <select id="stop"></select>
+    </div>
     <div class="seg" role="group" aria-label="ダイヤ">
       <button id="d-weekday" aria-pressed="false">平日</button>
       <button id="d-weekend" aria-pressed="false">土日祝</button>
     </div>
     <div class="hint">祝日は「土日祝」を手動で選んでください。</div>
-    <a id="live" class="live" href="#" target="_blank" rel="noopener">バスの接近情報を見る<span>↗</span></a>
+    <a id="live" class="live hidden" href="#" target="_blank" rel="noopener">バスの接近情報を見る<span>↗</span></a>
   </div>
 
-  <div class="next" id="next"></div>
-  <div class="nn" id="nn"></div>
-  <div class="list" id="list"></div>
+  <div id="view-stop">
+    <div class="next" id="next"></div>
+    <div class="nn" id="nn"></div>
+    <div class="list" id="list"></div>
+  </div>
+
+  <div id="view-overview">
+    <div id="ov-list"></div>
+  </div>
 
   <div class="foot" id="foot"></div>
 </div>
@@ -93,22 +134,58 @@
    青森駅行き（その停留所の基準方向）は時刻だけ "HH:MM"。
    それ以外は {t:"HH:MM", note:"路線コード"}。時刻は早い順。 */
 const busData = {
- /* ===== 伊丹・宝塚 ===== */
  "野里（伊丹方面）":{
   weekday:["06:22","06:53","07:28","08:04","09:00","10:36","11:47","13:04","14:57","16:08","17:43","18:14","18:54","19:44"],
   weekend:["06:30","07:32","08:36","10:15","11:26","12:35","13:46","14:32","15:42","16:53","17:46","19:42","20:47"]
  },
- "野里（宝塚方面）":{
-  weekday:[{t:"09:40",note:"72"},{t:"11:40",note:"72"},{t:"13:40",note:"72"},{t:"15:40",note:"72"}],
-  weekend:[]
+ "加茂小学校前（川西能勢口方面）":{
+  weekday:["06:22","06:38","06:56","07:09","07:22","07:31","07:50","08:05","08:28","08:48",
+   "09:07","09:27","09:47","10:07","10:27","10:47","11:07","11:27","11:47","12:07","12:27","12:47",
+   "13:07","13:27","13:47","14:07","14:27","14:47","15:07","15:27","15:47",
+   "16:08","16:28","16:48","17:08","17:22","17:37","17:57","18:17","18:37","18:55",
+   "19:17","19:44","20:13","20:44","21:24"],
+  weekend:["06:22","06:57","07:22","07:49","08:10","08:27","08:47",
+   "09:07","09:27","09:47","10:07","10:27","10:47","11:07","11:27","11:47","12:07","12:27","12:47",
+   "13:07","13:27","13:47","14:07","14:27","14:47","15:07","15:27","15:47","16:07","16:27","16:47",
+   "17:04","17:21","17:36","17:56","18:16","18:36","18:54","19:15","19:42","20:14","20:45","21:23"]
  },
- "緑ヶ丘7丁目（伊丹方面）":{
-  weekday:["06:28","06:59","07:34","08:10","09:06","10:42","11:53","13:10","15:03","16:14","17:49","18:20","19:00","19:50"],
-  weekend:["06:36","07:38","08:42","10:21","11:32","12:41","13:52","14:38","15:48","16:59","17:52","19:48","20:53"]
+ "大野（JR中山寺方面）":{
+  weekday:["17:50","20:16"],
+  weekend:["10:10","16:42"]
  },
- "緑ヶ丘7丁目（山本団地方面）":{
-  weekday:[{t:"07:12",note:"31"},{t:"07:45",note:"31"},{t:"08:23",note:"31"},{t:"10:17",note:"31"},{t:"11:30",note:"31"},{t:"12:47",note:"31"},{t:"14:39",note:"31"},{t:"15:51",note:"31"},{t:"17:02",note:"31"},{t:"17:54",note:"31"},{t:"18:32",note:"31"},{t:"19:14",note:"31"},{t:"19:51",note:"31"},{t:"20:31",note:"31"},{t:"21:37",note:"31"}],
-  weekend:[{t:"07:18",note:"31"},{t:"08:20",note:"31"},{t:"09:58",note:"31"},{t:"11:10",note:"31"},{t:"12:18",note:"31"},{t:"13:30",note:"31"},{t:"15:26",note:"31"},{t:"16:36",note:"31"},{t:"17:28",note:"31"},{t:"18:37",note:"31"},{t:"19:26",note:"31"},{t:"20:32",note:"31"},{t:"21:37",note:"31"}]
+ "大野（JR伊丹方面）":{
+  weekday:["06:00","06:14","06:26","06:40","06:50","06:58",
+   "07:06","07:17","07:22","07:30","07:37","07:44","07:51",
+   "08:02","08:14","08:26","08:39","08:49",
+   "09:01","09:17","09:33","09:51",
+   "10:13","10:35","10:57",
+   "11:25","11:50",
+   "12:11","12:31","12:51",
+   "13:19","13:47",
+   "14:11","14:33",
+   "15:01","15:31","15:56",
+   "16:15","16:31","16:54",
+   "17:11","17:27","17:41","17:55",
+   {t:"18:13",note:"54"},"18:22","18:43",
+   "19:02","19:25","19:46",
+   "20:08","20:28","20:48",
+   "21:20","22:01"],
+  weekend:["06:00","06:25","06:49",
+   "07:10","07:31","07:52",
+   "08:06","08:20","08:36","08:50",
+   "09:05","09:20","09:35","09:50",
+   "10:05","10:19","10:35","10:50",
+   "11:06","11:18","11:34","11:52",
+   "12:10","12:30","12:50",
+   "13:10","13:30","13:50",
+   "14:10","14:30","14:48",
+   "15:09","15:30","15:50",
+   "16:11","16:29","16:47",
+   "17:08","17:30","17:49",
+   "18:12","18:31","18:50",
+   "19:10","19:30","19:55",
+   "20:20","20:53",
+   "21:27","22:02"]
  },
  "ＪＲ伊丹（標柱6）":{
   weekday:[
@@ -134,25 +211,43 @@ const busData = {
    {t:"19:08",note:"岩22"},{t:"19:16",note:"31"},{t:"20:02",note:"岩22"},{t:"20:22",note:"31"},{t:"20:30",note:"岩22"},
    {t:"21:18",note:"岩22"},{t:"21:27",note:"31"},{t:"22:06",note:"岩22"}
   ]
+ },
+ "野里（宝塚方面）":{
+  weekday:[{t:"09:40",note:"72"},{t:"11:40",note:"72"},{t:"13:40",note:"72"},{t:"15:40",note:"72"}],
+  weekend:[]
+ },
+ "緑ヶ丘7丁目（伊丹方面）":{
+  weekday:["06:28","06:59","07:34","08:10","09:06","10:42","11:53","13:10","15:03","16:14","17:49","18:20","19:00","19:50"],
+  weekend:["06:36","07:38","08:42","10:21","11:32","12:41","13:52","14:38","15:48","16:59","17:52","19:48","20:53"]
+ },
+ "緑ヶ丘7丁目（山本団地方面）":{
+  weekday:[{t:"07:12",note:"31"},{t:"07:45",note:"31"},{t:"08:23",note:"31"},{t:"10:17",note:"31"},{t:"11:30",note:"31"},{t:"12:47",note:"31"},{t:"14:39",note:"31"},{t:"15:51",note:"31"},{t:"17:02",note:"31"},{t:"17:54",note:"31"},{t:"18:32",note:"31"},{t:"19:14",note:"31"},{t:"19:51",note:"31"},{t:"20:31",note:"31"},{t:"21:37",note:"31"}],
+  weekend:[{t:"07:18",note:"31"},{t:"08:20",note:"31"},{t:"09:58",note:"31"},{t:"11:10",note:"31"},{t:"12:18",note:"31"},{t:"13:30",note:"31"},{t:"15:26",note:"31"},{t:"16:36",note:"31"},{t:"17:28",note:"31"},{t:"18:37",note:"31"},{t:"19:26",note:"31"},{t:"20:32",note:"31"},{t:"21:37",note:"31"}]
  }
 };
 
 /* ===== ロジック ===== */
 const HOME={
- "野里（伊丹方面）":"阪急伊丹","緑ヶ丘7丁目（伊丹方面）":"阪急伊丹"
+ "野里（伊丹方面）":"阪急伊丹","緑ヶ丘7丁目（伊丹方面）":"阪急伊丹",
+ "加茂小学校前（川西能勢口方面）":"阪急川西能勢口駅",
+ "大野（JR中山寺方面）":"JR中山寺",
+ "大野（JR伊丹方面）":"JR伊丹"
 };
-function homeLabel(){return HOME[stop]||"";}
+function homeLabel(s){return HOME[s||stop]||"";}
 
 /* 主に乗らない系統（小さく表示し、次のバス候補から外す） */
-const MINOR={ "ＪＲ伊丹（標柱6）":["岩22","岩ク"] };
-function isMinor(e){ const m=MINOR[stop]; return !!(m && m.includes(eN(e))); }
+const MINOR={ "ＪＲ伊丹（標柱6）":["岩22","岩ク"], "大野（JR伊丹方面）":["54"] };
+function isMinor(e,s){ const m=MINOR[s||stop]; return !!(m && m.includes(eN(e))); }
 
 const LIVE={
  "野里（伊丹方面）":"https://itamicity-bus.bus-navigation.jp/wgsys/wgss/bus.htm?selectedLandmarkCatCd=&from=%E9%87%8E%E9%87%8C&fromType=1&to=&toType=&locale=ja&fromlat=&fromlng=&tolat=&tolng=&fromSignpoleKey=8215&routeLayoutCd=&fromBusStopCd=&toBusStopCd=&mapFlag=false&existYn=N&bsid=3",
  "緑ヶ丘7丁目（伊丹方面）":"https://itamicity-bus.bus-navigation.jp/wgsys/wgss/bus.htm?selectedLandmarkCatCd=&from=%E7%B7%91%E3%83%B6%E4%B8%98%EF%BC%97%E4%B8%81%E7%9B%AE&fromType=1&to=&toType=&locale=ja&fromlat=&fromlng=&tolat=&tolng=&fromSignpoleKey=8284&routeLayoutCd=&fromBusStopCd=&toBusStopCd=&mapFlag=false&existYn=N&bsid=3",
  "緑ヶ丘7丁目（山本団地方面）":"https://itamicity-bus.bus-navigation.jp/wgsys/wgss/bus.htm?selectedLandmarkCatCd=&from=%E7%B7%91%E3%83%B6%E4%B8%98%EF%BC%97%E4%B8%81%E7%9B%AE&fromType=1&to=&toType=&locale=ja&fromlat=&fromlng=&tolat=&tolng=&fromSignpoleKey=8283&routeLayoutCd=&fromBusStopCd=&toBusStopCd=&mapFlag=false&existYn=N&bsid=3",
  "ＪＲ伊丹（標柱6）":"https://itamicity-bus.bus-navigation.jp/wgsys/wgss/bus.htm?selectedLandmarkCatCd=&from=JR%E4%BC%8A%E4%B8%B9&fromType=1&to=&toType=&locale=ja&fromlat=&fromlng=&tolat=&tolng=&fromSignpoleKey=8091&routeLayoutCd=&fromBusStopCd=&toBusStopCd=&mapFlag=false&existYn=N&bsid=3",
- "野里（宝塚方面）":"https://transfer-cloud.navitime.biz/hankyubus/approachings?departure-busstop=00020876&pole=000000005516"
+ "野里（宝塚方面）":"https://transfer-cloud.navitime.biz/hankyubus/approachings?departure-busstop=00020876&pole=000000005516",
+ "加茂小学校前（川西能勢口方面）":"https://transfer-cloud.navitime.biz/hankyubus/approachings?departure-busstop=00020307&pole=000000004267",
+ "大野（JR中山寺方面）":"https://itamicity-bus.bus-navigation.jp/wgsys/wgss/bus.htm?selectedLandmarkCatCd=&from=%E5%A4%A7%E9%87%8E&fromType=1&to=&toType=&locale=ja&fromlat=&fromlng=&tolat=&tolng=&fromSignpoleKey=7968&routeLayoutCd=&fromBusStopCd=&toBusStopCd=&mapFlag=false&existYn=N&bsid=3",
+ "大野（JR伊丹方面）":"https://itamicity-bus.bus-navigation.jp/wgsys/wgss/bus.htm?selectedLandmarkCatCd=&from=%E5%A4%A7%E9%87%8E&fromType=1&to=&toType=&locale=ja&fromlat=&fromlng=&tolat=&tolng=&fromSignpoleKey=7969&routeLayoutCd=&fromBusStopCd=&toBusStopCd=&mapFlag=false&existYn=N&bsid=3"
 };
 
 
@@ -162,7 +257,28 @@ const eN=e=>typeof e==="string"?"":(e.note||"");
 const toSec=s=>{const[h,m]=s.split(":").map(Number);return h*3600+m*60;};
 const pad=n=>String(n).padStart(2,"0");
 
-let stop=null, day=null, lastNextIdx=-2;
+let stop=null, day=null, view=null, lastNextIdx=-2;
+
+function initView(){
+  let saved=null; try{saved=localStorage.getItem("busView");}catch(e){}
+  view=(saved==="stop")?"stop":"overview";
+  $("tab-overview").onclick=()=>setView("overview");
+  $("tab-stop").onclick=()=>setView("stop");
+  applyView();
+}
+function setView(v){
+  view=v; try{localStorage.setItem("busView",v);}catch(e){}
+  applyView();
+}
+function applyView(){
+  $("tab-overview").setAttribute("aria-pressed",view==="overview");
+  $("tab-stop").setAttribute("aria-pressed",view==="stop");
+  $("view-overview").classList.toggle("hidden",view!=="overview");
+  $("view-stop").classList.toggle("hidden",view!=="stop");
+  $("stop-picker").classList.toggle("hidden",view!=="stop");
+  if(view==="overview"){ $("live").classList.add("hidden"); buildOverview(); }
+  else{ $("live").classList.remove("hidden"); updateLive(); }
+}
 
 function initStops(){
   const sel=$("stop");
@@ -208,14 +324,70 @@ function buildList(){
   }
 }
 
+function buildOverview(){
+  const ov=$("ov-list"); ov.innerHTML="";
+  const now=new Date(); const nowSec=now.getHours()*3600+now.getMinutes()*60+now.getSeconds();
+  Object.keys(busData).forEach(key=>{
+    const arr=(busData[key][day])||[];
+    const upcoming=arr.filter(e=>toSec(eT(e))>nowSec);
+    const card=document.createElement("div");
+    card.className="ov-card";
+    let html=`<div class="name">${key}</div>`;
+    if(!arr.length){
+      html+=`<div class="none">この曜日は運行がありません</div>`;
+    }else if(!upcoming.length){
+      html+=`<div class="none">本日の運行は終了しました</div>`;
+    }else{
+      const [head,...rest]=upcoming.slice(0,3);
+      const hNote=eN(head), hSec=toSec(eT(head));
+      html+=`<div class="next-row">
+        <div class="toprow"><span class="t num">${eT(head)}</span>`+
+        (hNote?`<span class="tag">${hNote}</span>`:"")+
+        `</div>
+        <div class="cd"><b class="num ov-cd" data-t="${hSec}">${fmtCD(hSec-nowSec)}</b><span>後</span></div>
+      </div>`;
+      if(rest.length){
+        html+=`<div class="more">`+rest.map(e=>{
+          const note=eN(e);
+          return `<span class="item"><span class="t num">${eT(e)}</span>`+
+            (note?`<span class="tag">${note}</span>`:"")+`</span>`;
+        }).join("")+`</div>`;
+      }
+    }
+    card.innerHTML=html;
+    card.querySelector(".name").onclick=()=>{
+      stop=key; $("stop").value=key;
+      try{localStorage.setItem("busStop",stop);}catch(e){}
+      setView("stop"); updateLive(); buildList(); tick(true);
+    };
+    ov.appendChild(card);
+  });
+}
+
+function updateOverviewCountdowns(nowSec){
+  document.querySelectorAll(".ov-cd").forEach(el=>{
+    const t=Number(el.dataset.t);
+    el.textContent=fmtCD(Math.max(0,t-nowSec));
+  });
+}
+
 function fmtCD(sec){
   if(sec>=3600){const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60);return `${h}時間${m}分`;}
   if(sec>=60){const m=Math.floor(sec/60),s=sec%60;return `${m}分${pad(s)}秒`;}
   return `${sec}秒`;
 }
 
+let lastOvMinute=-1;
 function tick(force){
   const now=new Date(); const nowSec=now.getHours()*3600+now.getMinutes()*60+now.getSeconds();
+
+  if(view==="overview"){
+    const m=now.getHours()*60+now.getMinutes();
+    if(force||m!==lastOvMinute){ lastOvMinute=m; buildOverview(); }
+    else{ updateOverviewCountdowns(nowSec); }
+    return;
+  }
+
   const arr=times();
   let ni=-1, niAny=-1;
   for(let i=0;i<arr.length;i++){
@@ -262,14 +434,15 @@ function tick(force){
 
 initStops();
 initDay();
-updateLive();
+initView();
 buildList();
 tick(true);
 setInterval(()=>tick(false),1000);
 
 document.getElementById("foot").innerHTML =
- "系統: 31=阪急伊丹〜JR伊丹〜北村〜緑ヶ丘7丁目〜野里〜総監部前〜山本団地 / 岩22=岩屋循環(22・23、神津交流センター前・岩屋経由) / ク=クリーンランド経由 / 72=阪急バス 阪急逆瀬川ゆき(JR中山寺・宝塚市立病院経由、平日のみ)。<br>"+
- "無印は阪急伊丹ゆき。時刻は発車予定で交通事情により前後します。";
+ "系統: 31=阪急伊丹〜JR伊丹〜北村〜緑ヶ丘7丁目〜野里〜総監部前〜山本団地 / 岩22=岩屋循環(22・23、神津交流センター前・岩屋経由) / ク=クリーンランド経由 / 72=阪急バス 阪急逆瀬川ゆき(JR中山寺・宝塚市立病院経由、平日のみ) / 54=大野〜伊丹坂経由でJR伊丹ゆき。<br>"+
+ "無印はその停留所の主方向（見出しどおり）。時刻は発車予定で交通事情により前後します。<br>"+
+ "大野（JR中山寺方面）は「三」表示（三師団・交通局前止まり）の便を除外しています。";
 </script>
 </body>
 </html>
