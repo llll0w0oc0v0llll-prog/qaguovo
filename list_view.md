@@ -10,13 +10,13 @@ GitHub上のHTMLファイルを直接開くのではなく、**GitHub Pagesで�
 
 | No. | ページ名 | ページ概要 | Webページ |
 |---:|---|---|---|
-| 1 | ページ1 | ページの概要を記載 | [▶ 開く](HTML_PAGE_URL_01) |
-| 2 | ページ2 | ページの概要を記載 | [▶ 開く](HTML_PAGE_URL_02) |
-| 3 | ページ3 | ページの概要を記載 | [▶ 開く](HTML_PAGE_URL_03) |
-| 4 | ページ4 | ページの概要を記載 | [▶ 開く](HTML_PAGE_URL_04) |
-| 5 | ページ5 | ページの概要を記載 | [▶ 開く](HTML_PAGE_URL_05) |
-| 6 | ページ6 | ページの概要を記載 | [▶ 開く](HTML_PAGE_URL_06) |
-| 7 | ページ7 | ページの概要を記載 | [▶ 開く](HTML_PAGE_URL_07) |
+| 1 | バス時刻表ツール | 最終更新：2026/08/22 | [▶ 開く](https://llll0w0oc0v0llll-prog.github.io/qaguovo/bus_timetable.html) |
+| 2 | Ｇ検定勉強ツール | 最終更新：2026/08/16 | [▶ 開く](https://llll0w0oc0v0llll-prog.github.io/qaguovo/gtest practice.html) |
+| 3 | 箱庭諸島ゲーム | 最終更新：2026/08/12 | [▶ 開く](https://llll0w0oc0v0llll-prog.github.io/qaguovo/hakoniwa.html) |
+| 4 | 引越し管理ツール | 最終更新：2026/07/08 | [▶ 開く](https://llll0w0oc0v0llll-prog.github.io/qaguovo/hikkoshi-manager.html) |
+| 5 | レイアウトツール | 最終更新：2026/07/11 | [▶ 開く](https://llll0w0oc0v0llll-prog.github.io/qaguovo/room-layout-planner.html) |
+| 6 | 数独検算ツール | 最終更新：2026/08/12 | [▶ 開く](https://llll0w0oc0v0llll-prog.github.io/qaguovo/sudoku-memo.html) |
+| 7 | ページ7 | 最終更新： | [▶ 開く](https://llll0w0oc0v0llll-prog.github.io/qaguovo/) |
 
 ### ページ追加時
 
@@ -32,7 +32,7 @@ No.は既存ページと重複しないように連番で管理します。
 
 ## 🏠 トップページ
 
-**[▶ Webサイトのトップページを開く](GITHUB_PAGES_TOP_URL)**
+**[▶ Webサイトのトップページを開く](https://github.com/llll0w0oc0v0llll-prog/qaguovo)**
 
 ---
 
