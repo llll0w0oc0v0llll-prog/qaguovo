@@ -109,6 +109,7 @@
   .opt.dim{opacity:.55}
   .explain{margin-top:14px; padding:13px 15px; border-radius:11px; background:#f4f6fb; border-left:3px solid var(--primary); font-size:13.5px}
   .explain b{font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--primary); display:block; margin-bottom:3px}
+  .qtagline{margin-top:9px; padding-top:8px; border-top:1px solid #e3e8f2; font-family:var(--mono); font-size:11px; color:var(--sub); letter-spacing:.03em}
   .verdict{font-family:var(--mono); font-weight:700; font-size:13px}
   .verdict.ok{color:var(--good)} .verdict.ng{color:var(--bad)}
 
@@ -200,7 +201,7 @@ const QUESTIONS=[
 {c:'ai_trend',q:'第3次AIブームを支えた主要因として適切でないものはどれか。',o:['ビッグデータの蓄積','GPUなど計算資源の向上','ディープラーニングの進展','エキスパートシステムの完成'],a:3,e:'第3次はデータ・計算資源・DLが要因。エキスパートシステムは第2次の技術。',t:'第3次AIブームを支えた主要因'},
 {c:'ai_trend',q:'人間の知識を計算機が扱える形に体系化したもの（概念や関係の明示的記述）を何と呼ぶか。',o:['オントロジー','ハイパーパラメータ','ミニバッチ','活性化関数'],a:0,e:'オントロジーは概念や関係を形式的に記述したもの。',t:'オントロジー'},
 {c:'ai_trend',q:'記号を結びつけて知識を表現するネットワーク構造を何と呼ぶか。',o:['意味ネットワーク','畳み込み層','プーリング層','残差接続'],a:0,e:'意味ネットワークはノードとリンクで概念間の関係を表す知識表現。',t:'意味ネットワーク'},
-{c:'ai_trend',q:'2024年のシラバス改訂で新たに追加・拡充された分野として適切なものはどれか。',o:['基盤モデル・生成AI、AIガバナンス（法律・倫理）','探索・推論','知識表現','エキスパートシステム'],a:0,e:'JDLAは2024年5月にシラバスを改訂し、基盤モデルや大規模言語モデルなど生成AIに必要な技術、およびAIガバナンス（法律・倫理・社会実装）に関する内容を新たに追加した（公式テキスト第3版刊行）。探索・推論や知識表現、エキスパートシステムといった歴史的トピックも引き続き出題範囲に含まれる。',t:'2024年改訂シラバス'},
+{c:'ai_trend',q:'大量かつ多様なデータで大規模に事前学習し、ファインチューニング等によって幅広い下流タスクに適応できるモデルの総称はどれか。',o:['基盤モデル（Foundation Model）','エキスパートシステム','決定木','オートエンコーダ'],a:0,e:'基盤モデルは大規模データで事前学習され、多様なタスクへ適応できるモデルの総称。GPTやBERT、CLIPなどが該当し、2022年以降の生成AIの中核となっている。2024年のシラバス改訂で新たに出題範囲に加わった重要概念。',t:'基盤モデル（Foundation Model）'},
 {c:'ai_trend',q:'初期のAI研究で解かれた、迷路やパズルのような単純で限定的な問題を何と呼ぶか。',o:['トイ・プロブレム','フレーム問題','次元の呪い','勾配消失問題'],a:0,e:'トイ・プロブレムは限定的で簡単な問題。現実の複雑な問題には対応できず批判された。',t:'トイ・プロブレム'},
 {c:'ml',q:'正解ラベル付きデータから入力と出力の関係を学習する手法はどれか。',o:['教師あり学習','教師なし学習','強化学習','転移学習'],a:0,e:'入力と正解の組から関係を学ぶのが教師あり学習。',t:'教師あり学習'},
 {c:'ml',q:'ラベルのないデータから構造やまとまりを見つける手法はどれか。',o:['教師あり学習','教師なし学習','強化学習','半教師あり学習'],a:1,e:'クラスタリングや次元削減など、正解なしで構造を捉える。',t:'教師なし学習'},
@@ -496,9 +497,9 @@ const QUESTIONS=[
 {c:'dl_ov',q:'どんな値を入力しても0から1の間に変換されるため、最終的に確率を出力する際に有用な活性化関数はどれか。',o:['シグモイド関数','tanh関数','ReLU関数','ステップ関数'],a:0,e:'シグモイド関数は0から1の値に変換する。tanh関数は-1から1、ReLU関数は0以上の値、ステップ関数は0または1の値に変換する。',t:'シグモイド関数'},
 {c:'dl_ov',q:'テストデータの一部が訓練データに紛れ込んだ場合に起こり得る問題として最も適切なものはどれか。',o:['モデルの性能が不当に高く評価される','モデルの性能が不当に低く評価される','学習時間が必ず短縮される','特に問題は生じない'],a:0,e:'訓練データとテストデータが重複しないように分割しないと、本来の性能より高い評価が出てしまう（データリーク）。',t:'テストデータの一部が訓練データに紛れ込んだ場合に起こり得る問題'},
 {c:'dl_ov',q:'全訓練データ数をNとするとき、パラメータ更新に用いられるデータ数の組み合わせとして最も適切なものはどれか。',o:['オンライン学習では1、バッチ学習ではN、ミニバッチ学習ではn＜N','オンライン学習ではN、バッチ学習では1、ミニバッチ学習ではn＜N','オンライン学習ではN、バッチ学習ではn＜N、ミニバッチ学習では1','オンライン学習では1、バッチ学習ではn＜N、ミニバッチ学習ではN'],a:0,e:'オンライン学習は1件ずつ、バッチ学習は全データ、ミニバッチ学習はその中間の一部データでパラメータを更新する。',t:'バッチ学習・オンライン学習・ミニバッチ学習'},
-{c:'dl_ov',q:'ノーフリーランチの定理が示す内容として最も適切なものはどれか。',o:['あらゆる問題で性能の良い汎用の最適化戦略は、理論上存在しない','未知の入力に対して常に良好な結果を出力するモデルは実現可能である','モデルの次元数が増えるにつれて必要なデータは指数関数的に増加する','競合する複数の仮説があるときは、最も単純な仮説を選ぶべきである'],a:0,e:'どんな問題でも通用する学習プロセスは存在しないため、問題に応じて試行錯誤する必要がある。選択肢3は次元の呪い、4はオッカムの剃刀の説明。',t:'ノーフリーランチの定理が示す内容'},
+{c:'dl_ov',q:'ノーフリーランチの定理が示す内容として最も適切なものはどれか。',o:['あらゆる問題で性能の良い汎用の最適化戦略は、理論上存在しない','未知の入力に対して常に良好な結果を出力するモデルは実現可能である','モデルの次元数が増えるにつれて必要なデータは指数関数的に増加する','競合する複数の仮説があるときは、最も単純な仮説を選ぶべきである'],a:0,e:'どんな問題でも通用する万能の学習・最適化戦略は存在しないため、問題に応じて手法を選び試行錯誤する必要がある。なお「次元数が増えるほど必要なデータが指数関数的に増える」のは次元の呪い、「競合する仮説のうち最も単純なものを選ぶ」のはオッカムの剃刀の説明。',t:'ノーフリーランチの定理が示す内容'},
 {c:'dl_ov',q:'誤差関数が増加し始めた段階で学習を停止する手法と、その停止タイミングの判断を難しくする「誤差が増加に転じた後、再び減少する」現象の組み合わせはどれか。',o:['早期終了と二重降下現象','早期終了と勾配停留現象','ドロップアウトと二重降下現象','ドロップアウトと勾配停留現象'],a:0,e:'二重降下現象のように、学習の繰り返し回数を多く設定しておかないと分からない現象もあるため、停止タイミングは慎重な検討が必要な場合がある。',t:'早期終了と二重降下現象'},
-{c:'dl_tech',q:'Random Erasingの説明として最も適切なものはどれか。',o:['画像の一部の画素をランダムに決定した値に変更して新しい画像を生成する、データ拡張の1手法である','学習の繰り返しごとにランダムにニューロンを除外して学習を進める手法である','文中の一部の単語をランダムにマスクし、マスクされた単語を予測させる学習手法である','推論への影響が少ないニューロン間の接続をランダムに取り除く手法である'],a:0,e:'Random Erasingは画像処理に用いられるデータ拡張手法。2はドロップアウト、3はMasked Language Model、4はプルーニングの説明。',t:'Random Erasing'},
+{c:'dl_tech',q:'Random Erasingの説明として最も適切なものはどれか。',o:['画像の一部の画素をランダムに決定した値に変更して新しい画像を生成する、データ拡張の1手法である','学習の繰り返しごとにランダムにニューロンを除外して学習を進める手法である','文中の一部の単語をランダムにマスクし、マスクされた単語を予測させる学習手法である','推論への影響が少ないニューロン間の接続をランダムに取り除く手法である'],a:0,e:'Random Erasingは画像の一部をランダムな値で置き換えて水増しするデータ拡張手法。なお「学習の繰り返しごとにランダムにニューロンを除外する」のはドロップアウト、「文中の単語をマスクして予測させる」のはMasked Language Model、「影響の小さい接続を取り除く」のはプルーニングの説明。',t:'Random Erasing'},
 {c:'dl_tech',q:'データ拡張の目的として最も不適切なものはどれか。',o:['学習時間の短縮','学習データの水増し','未知のデータに対する汎化性能の向上','過学習の抑制'],a:0,e:'データ拡張によりデータを水増しすることで汎化性能が向上し過学習を抑制できるが、その分学習時間はむしろ増える。',t:'データ拡張の目的'},
 {c:'dl_tech',q:'CNNに関する説明として最も適切なものはどれか。',o:['畳み込み処理は、生物の視覚の情報処理にヒントを得たニューラルネットワークの処理法の1つである','CNNは自然言語処理と強化学習のみに適したニューラルネットワークである','CNNにスキップ結合を加えると学習速度が必ず低下する','CNNにはプーリング処理が必ず必要である'],a:0,e:'CNNは生物の視覚の情報処理に着想を得て生まれた。プーリング処理は必須ではない。',t:'CNN'},
 {c:'dl_tech',q:'自然言語処理の文脈において、複数の単語ベクトルのどのベクトルを重要視するかも含めて学習させる仕組みはどれか。',o:['Attention','オートエンコーダ','ボルツマンマシン','敵対的生成ネットワーク（GAN）'],a:0,e:'Attentionにより単語ベクトル間の関連性を捉えることができる。',t:'Attention'},
@@ -517,7 +518,7 @@ const QUESTIONS=[
 {c:'dl_app',q:'音色を表し話者の識別などを可能にする「周波数スペクトルの形状」と、それを求める一般的な方法の組み合わせとして最も適切なものはどれか。',o:['スペクトル包絡とメル周波数ケプストラム係数（MFCC）','フォルマント周波数とMFCC','フォルマント周波数と隠れマルコフモデル','スペクトル包絡と隠れマルコフモデル'],a:0,e:'周波数スペクトルの形状を表すのはスペクトル包絡で、MFCCを用いて求めるのが一般的。フォルマント周波数は音声の共振周波数（周波数のピークがフォルマント）。',t:'スペクトル包絡とMFCC'},
 {c:'dl_app',q:'RNNによる音声認識で、どの音素にも対応しない空文字を挿入し、同一の音素を縮約することで入力と出力の数を一致させるアルゴリズムはどれか。',o:['CTC','CEC','BPTT','HMM'],a:0,e:'CTCにより、同じ音素が連続する場合でも1つの音素にすることができる。',t:'CTC'},
 {c:'dl_app',q:'LSTMで採用されている、誤差を内部にとどまらせることを目的とし、RNNの課題である「時間の経過とともに過去の勾配が消えてしまう問題」に対応する仕組みはどれか。',o:['CEC','GRU','BPTT','Attention'],a:0,e:'CECはLSTMを構成するメモリセルに当たる。各種ゲートの役割とあわせて理解しておく。',t:'CEC'},
-{c:'dl_app',q:'キャプション生成の説明として最も適切なものはどれか。',o:['入力画像を説明する自然言語文を出力する','文書に書かれている手書き文字などを読み取る','画像から対象物の位置を矩形領域で特定する','画素単位でクラス識別を行う'],a:0,e:'2はOCR、3は物体検出、4はセマンティックセグメンテーションの説明。',t:'キャプション生成'},
+{c:'dl_app',q:'キャプション生成の説明として最も適切なものはどれか。',o:['入力画像を説明する自然言語文を出力する','文書に書かれている手書き文字などを読み取る','画像から対象物の位置を矩形領域で特定する','画素単位でクラス識別を行う'],a:0,e:'キャプション生成は入力画像の内容を説明する自然言語文を生成するタスク。なお「手書き文字などを読み取る」のはOCR、「対象物の位置を矩形領域で特定する」のは物体検出、「画素単位でクラス識別を行う」のはセマンティックセグメンテーションの説明。',t:'キャプション生成'},
 {c:'dl_app',q:'BoW（Bag-of-Words）に関する説明として最も適切なものはどれか。',o:['単語の出現回数によって言語分析を行うモデルである','語順を考慮した言語分析を行うモデルである','意味のある特定の熟語群を示す用語である','相槌など文意に大きな影響を与えない単語群を示す用語である'],a:0,e:'BoWは語順を考慮せずに単語の出現頻度を特徴ベクトルとする。',t:'BoW（Bag-of-Words）'},
 {c:'dl_app',q:'BERTについて最も不適切なものはどれか。',o:['文章の冒頭から末尾までの一方の方向に対してTransformerを適用している','ラベルが付与されていないデータを用いて事前学習を行う','Masked Language Modelを利用している','Next Sentence Predictionを利用している'],a:0,e:'BERTは文頭から文末への順方向と文末から文頭への逆方向の両方に対応した、双方向の処理を行うことが特長。',t:'BERT'},
 {c:'dl_app',q:'CAMに関する説明として最も適切なものはどれか。',o:['グローバルアベレージプーリング（GAP）を有する画像認識モデルにおいてのみ適用可能な、判断根拠の可視化手法である','勾配情報を用いてGAPのないモデルでも判断根拠を可視化できる','2017年に発表されたGrad-CAMの後継手法である','自然言語処理専用の可視化手法である'],a:0,e:'CAMは2016年に発表された、画像認識の判断根拠を可視化する初めての手法として知られる。可視化できる層はGAPの手前だけ。',t:'CAM'},
@@ -694,7 +695,7 @@ function renderDashboard(){
             <div class="meta"><b style="color:var(--amber)">${weak.length}</b><span>苦手分野</span></div>
           </div>
         </div>
-        ${sess?`<p class="muted" style="margin-top:10px">前回: ${sess.label} で ${sess.correct}/${sess.total}（${pctVal(sess.correct,sess.total)}%）</p>`:''}
+        ${sess?`<p class="muted" style="margin-top:10px">前回: ${sess.label}${sess.partial?`（中断 ${sess.total}/${sess.planned}問）`:''} で ${sess.correct}/${sess.total}（${pctVal(sess.correct,sess.total)}%）</p>`:''}
       </div>
 
       <div class="btnrow">
@@ -965,13 +966,14 @@ function renderQuestion(){
         <span class="qcount">${idx+1} / ${items.length}</span>
       </div>
       <div class="card">
-        <div class="qcat">${cat.code} ${cat.name} · ${esc(it.q.t)}</div>
+        <div class="qcat">${cat.code} ${cat.name}</div>
         <div class="qtext">${esc(it.q.q)}</div>
         <div id="opts">${opts}</div>
         ${answered?`
           <div class="explain">
             <span class="verdict ${correct?'ok':'ng'}">${verdictText}　正答: ${'ABCD'[it.answerPos]}</span>
             <div style="margin-top:8px"><b>解説</b>${esc(it.q.e)}</div>
+            <div class="qtagline">用語: ${esc(it.q.t)}</div>
           </div>
           <button class="btn primary" id="next" style="margin-top:14px">${idx+1<items.length?'次の問題へ':'結果を見る'}</button>
         `:`
@@ -979,7 +981,7 @@ function renderQuestion(){
         `}
       </div>
     </div>`;
-  $('#quit').onclick=()=>{ if(confirm('この演習を中断してダッシュボードに戻りますか？（今回の結果は記録されません）')){ QUIZ=null; renderDashboard(); } };
+  $('#quit').onclick=renderQuitConfirm;
   if(!answered){
     $('#opts').onclick=e=>{ const b=e.target.closest('.opt'); if(!b)return; it.picked=+b.dataset.pos; renderQuestion(); };
     $('#skip').onclick=()=>{ it.picked=-1; renderQuestion(); };
@@ -988,11 +990,12 @@ function renderQuestion(){
   }
 }
 
-async function finishQuiz(){
-  const {items,label}=QUIZ;
+// 回答済みの問題だけを受け取り、STATSに反映する。
+// ※ 未回答（picked===null）を渡すと不正解として計上されるので、必ず呼び出し側で除外すること。
+function aggregateAnswers(answeredItems){
   const per={}; let correct=0;
-  const missedThisSession=[];
-  items.forEach(it=>{
+  const missed=[];
+  answeredItems.forEach(it=>{
     const ok=it.picked===it.answerPos; if(ok)correct++;
     const c=it.q.c; (per[c]=per[c]||{c:0,t:0}); per[c].t++; if(ok)per[c].c++;
     STATS.cats[c].total++; if(ok)STATS.cats[c].correct++;
@@ -1008,14 +1011,67 @@ async function finishQuiz(){
     else{
       const pickedText = it.picked===-1 ? '（スキップ）' : it.order[it.picked].t;
       STATS.questions[qkey].wrongTexts[pickedText]=(STATS.questions[qkey].wrongTexts[pickedText]||0)+1;
-      missedThisSession.push({q:it.q, pickedText, correctText:it.q.o[it.q.a]});
+      missed.push({q:it.q, pickedText, correctText:it.q.o[it.q.a]});
     }
   });
-  STATS.sessions.push({label,correct,total:items.length,date:Date.now()});
+  return {per, correct, missed};
+}
+function pushSession(s){
+  STATS.sessions.push(s);
   if(STATS.sessions.length>20) STATS.sessions=STATS.sessions.slice(-20);
   STATS.updated=Date.now();
+}
+
+async function finishQuiz(){
+  const {items,label}=QUIZ;
+  const {per,correct,missed}=aggregateAnswers(items);
+  pushSession({label,correct,total:items.length,date:Date.now()});
   await Store.save(STATS);
-  renderResults(per,correct,items.length,label,missedThisSession);
+  renderResults(per,correct,items.length,label,missed);
+}
+
+// 中断確認画面（記録して中断／破棄して中断／演習に戻る の3択）
+function renderQuitConfirm(){
+  toTop();
+  const {items}=QUIZ;
+  const answered=items.filter(it=>it.picked!==null).length;
+  root().innerHTML=`
+    <div class="stack">
+      <div>
+        <span class="eyebrow">演習の中断</span>
+        <h1>演習を中断しますか？</h1>
+        <p class="lede">${answered
+          ? `全${items.length}問中、ここまで <b>${answered}問</b> に回答しています。回答済みの分を学習記録に反映するかを選べます。`
+          : 'まだ回答した問題がないため、記録されるものはありません。'}</p>
+      </div>
+      <div class="card">
+        <div class="stack">
+          ${answered?`
+            <button class="btn primary" id="qrec">ここまでの${answered}問を記録して中断</button>
+            <button class="btn ghost" id="qdis" style="border-color:var(--bad);color:var(--bad)">記録せずに破棄して中断</button>
+          `:`
+            <button class="btn ghost" id="qdis">中断してダッシュボードに戻る</button>
+          `}
+          <button class="btn ghost" id="qback">演習に戻る</button>
+        </div>
+      </div>
+    </div>`;
+  const r=$('#qrec'); if(r) r.onclick=quitWithRecord;
+  $('#qdis').onclick=()=>{ QUIZ=null; renderDashboard(); };
+  $('#qback').onclick=renderQuestion;
+}
+
+// 回答済みの分だけを記録して中断する
+async function quitWithRecord(){
+  const {items,label}=QUIZ;
+  const answered=items.filter(it=>it.picked!==null);
+  if(answered.length){
+    const {correct}=aggregateAnswers(answered);
+    pushSession({label, correct, total:answered.length, date:Date.now(), partial:true, planned:items.length});
+    await Store.save(STATS);
+  }
+  QUIZ=null;
+  renderDashboard();
 }
 
 function renderResults(per,correct,total,label,missedThisSession){
