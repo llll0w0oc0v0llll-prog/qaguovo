@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="ja" data-color="orange">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#000000">
+<title>バス発車標</title>
+<style>
+  :root{--led:#ff9f1c;--led-line:rgba(255,159,28,.30);--led-soft:rgba(255,159,28,.66);--alert:#ff5a4d}
+  html[data-color="green"]{--led:#3ddc84;--led-line:rgba(61,220,132,.30);--led-soft:rgba(61,220,132,.66)}
+  html[data-color="white"]{--led:#f2f2f2;--led-line:rgba(242,242,242,.30);--led-soft:rgba(242,242,242,.66)}
+  html[data-color="cyan"]{--led:#4dd0ff;--led-line:rgba(77,208,255,.30);--led-soft:rgba(77,208,255,.66)}
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:#000;color:var(--led);overflow:hidden}
+  body{font-family:'Hiragino Kaku Gothic ProN','Hiragino Sans','Noto Sans CJK JP','Noto Sans JP',Meiryo,'Yu Gothic',sans-serif;
+    -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;
+    -webkit-user-select:none;user-select:none}
+  .num{font-family:'Roboto Mono','SF Mono',ui-monospace,Menlo,Consolas,monospace;
+    font-variant-numeric:tabular-nums;font-weight:700}
+
+  /* 焼き付き対策のずらし・夜間減光は #stage にまとめてかける */
+  #stage{position:absolute;left:0;top:0;right:0;bottom:0;transition:transform 1.2s ease,opacity .8s ease}
+  body.night #stage{opacity:.38}
+
+  #bar{height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 12px 0 16px}
+  #clock{font-size:26px;font-weight:800;letter-spacing:.04em}
+  #badge{font-size:15px;font-weight:700;color:var(--led-soft);margin-left:12px}
+  #gear{width:46px;height:46px;border:0;background:transparent;color:var(--led);opacity:.5;
+    display:flex;align-items:center;justify-content:center;border-radius:12px;cursor:pointer}
+  #gear:active{opacity:1;background:rgba(255,255,255,.08)}
+  #gear svg{width:26px;height:26px}
+
+  #grid{position:absolute;left:0;right:0;top:52px;bottom:0;display:grid;gap:8px;padding:8px}
+  .card{border:1px solid var(--led-line);border-radius:.3em;display:flex;align-items:center;
+    justify-content:center;min-width:0;min-height:0;overflow:hidden}
+  .in{width:100%;padding:.3em .5em}
+  .r1{display:flex;align-items:baseline;gap:.4em;white-space:nowrap}
+  .nm{font-size:.62em;font-weight:800;line-height:1.25}
+  .dr{font-size:.42em;font-weight:700;color:var(--led-soft)}
+  .r2{display:flex;align-items:baseline;gap:.25em;line-height:1.05;margin-top:.05em}
+  .tm{font-size:1.8em;line-height:1;flex:none}
+  .tg{font-size:.36em;font-weight:800;color:var(--led-soft);border:1px solid var(--led-soft);
+    border-radius:.4em;padding:.05em .35em;align-self:center;flex:none;white-space:nowrap}
+  .cd{margin-left:auto;font-size:.72em;font-weight:800;white-space:nowrap;flex:none;
+    font-variant-numeric:tabular-nums}
+  .cd i{font-style:normal;font-size:.55em;color:var(--led-soft);margin-left:.15em}
+  .cd.soon b{color:var(--alert)}
+  .r3{display:flex;align-items:baseline;gap:.55em;font-size:.55em;color:var(--led-soft);
+    white-space:nowrap;margin-top:.1em}
+  .r3 .tg{font-size:.7em;align-self:center}
+  /* 縦積み: カウントダウンを時刻の下の行に置く(狭いカードや縦置き向け) */
+  #grid.stack .r2{flex-wrap:wrap}
+  #grid.stack .cd{margin-left:0;flex:0 0 100%;font-size:.8em;margin-top:.05em}
+  .msg{font-size:.7em;font-weight:700;color:var(--led-soft);padding:.5em 0}
+  #empty{grid-column:1/-1;display:flex;align-items:center;justify-content:center;
+    font-size:20px !important;color:var(--led-soft);text-align:center;line-height:1.7}
+
+  /* ===== 設定パネル ===== */
+  #panelWrap{position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,.82);
+    display:none;align-items:center;justify-content:center;z-index:10}
+  #panelWrap.open{display:flex}
+  #panel{width:min(94vw,560px);max-height:92vh;overflow:auto;background:#111;color:var(--led);
+    border:1px solid var(--led-line);border-radius:16px;padding:16px 18px 20px;font-size:16px;
+    -webkit-user-select:none;user-select:none}
+  .ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+  .ph b{font-size:19px}
+  #panel h3{font-size:12px;font-weight:800;letter-spacing:.12em;color:var(--led-soft);margin:16px 0 6px}
+  #panel button{font:inherit;font-weight:700;color:var(--led);background:#1b1b1b;
+    border:1px solid var(--led-line);border-radius:10px;padding:10px 14px;cursor:pointer}
+  #panel button[aria-pressed="true"]{background:var(--led);color:#000;border-color:var(--led)}
+  .seg{display:flex;gap:8px}
+  .seg button{flex:1}
+  .row label{display:flex;align-items:center;gap:12px;padding:9px 2px;font-size:17px;cursor:pointer}
+  .row input{width:24px;height:24px;accent-color:var(--led);flex:none}
+  .tools{display:flex;gap:8px;margin-bottom:4px}
+  .tools button{padding:7px 12px;font-size:14px}
+  .swatches{display:flex;gap:10px;flex-wrap:wrap}
+  .swatches button{display:flex;align-items:center;gap:8px;padding:9px 14px}
+  .swatches i{width:18px;height:18px;border-radius:50%;display:inline-block;border:1px solid rgba(255,255,255,.3)}
+  .note{font-size:12px;line-height:1.6;color:var(--led-soft);margin-top:6px}
+  .state{font-size:12px;color:var(--led-soft);margin:-2px 0 4px 36px}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="bar">
+    <div><span id="clock" class="num">--:--:--</span><span id="badge"></span></div>
+    <button id="gear" type="button" aria-label="設定を開く">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+    </button>
+  </div>
+  <div id="grid"></div>
+</div>
+
+<div id="panelWrap">
+  <div id="panel" role="dialog" aria-label="表示設定">
+    <div class="ph"><b>表示設定</b><button id="pclose" type="button">閉じる</button></div>
+
+    <h3>表示する停留所</h3>
+    <div class="tools">
+      <button id="selAll" type="button">すべて選ぶ</button>
+      <button id="selNone" type="button">すべて外す</button>
+    </div>
+    <div class="row" id="stopList"></div>
+
+    <h3>文字色</h3>
+    <div class="swatches" id="colors"></div>
+
+    <h3>ダイヤ</h3>
+    <div class="seg" id="daySeg">
+      <button type="button" data-mode="auto">自動(曜日)</button>
+      <button type="button" data-mode="weekday">平日</button>
+      <button type="button" data-mode="weekend">土日祝</button>
+    </div>
+    <p class="note">祝日は「土日祝」を選んでください。選んだ日の終わりに自動へ戻ります。</p>
+
+    <h3>常時表示</h3>
+    <div class="row">
+      <label><input type="checkbox" id="optWake">画面を消さない</label>
+      <div class="state" id="wakeState"></div>
+      <label><input type="checkbox" id="optShift">焼き付き対策(数分ごとに表示を少しずらす)</label>
+      <label><input type="checkbox" id="optNight">夜間は暗くする(23時〜5時)</label>
+    </div>
+
+    <h3>全画面</h3>
+    <button id="fsBtn" type="button">全画面にする</button>
+    <p class="note">ブラウザのバーを消します。操作は右上の歯車から行えます。</p>
+  </div>
+</div>
+
+<script>
+/* ===== データ(bus_timetable.html と同じ内容。更新時は両方を直す) ===== */
+const busData = {
+ "野里（伊丹方面）":{
+  weekday:["06:22","06:53","07:28","08:04","09:00","10:36","11:47","13:04","14:57","16:08","17:43","18:14","18:54","19:44"],
+  weekend:["06:30","07:32","08:36","10:15","11:26","12:35","13:46","14:32","15:42","16:53","17:46","19:42","20:47"]
+ },
+ "加茂小学校前（川西能勢口方面）":{
+  weekday:["06:22","06:38","06:56","07:09","07:22","07:31","07:50","08:05","08:28","08:48",
+   "09:07","09:27","09:47","10:07","10:27","10:47","11:07","11:27","11:47","12:07","12:27","12:47",
+   "13:07","13:27","13:47","14:07","14:27","14:47","15:07","15:27","15:47",
+   "16:08","16:28","16:48","17:08","17:22","17:37","17:57","18:17","18:37","18:55",
+   "19:17","19:44","20:13","20:44","21:24"],
+  weekend:["06:22","06:57","07:22","07:49","08:10","08:27","08:47",
+   "09:07","09:27","09:47","10:07","10:27","10:47","11:07","11:27","11:47","12:07","12:27","12:47",
+   "13:07","13:27","13:47","14:07","14:27","14:47","15:07","15:27","15:47","16:07","16:27","16:47",
+   "17:04","17:21","17:36","17:56","18:16","18:36","18:54","19:15","19:42","20:14","20:45","21:23"]
+ },
+ "大野（JR中山寺方面）":{
+  weekday:["17:50","20:16"],
+  weekend:["10:10","16:42"]
+ },
+ "大野（JR伊丹方面）":{
+  weekday:["06:00","06:14","06:26","06:40","06:50","06:58",
+   "07:06","07:17","07:22","07:30","07:37","07:44","07:51",
+   "08:02","08:14","08:26","08:39","08:49",
+   "09:01","09:17","09:33","09:51",
+   "10:13","10:35","10:57",
+   "11:25","11:50",
+   "12:11","12:31","12:51",
+   "13:19","13:47",
+   "14:11","14:33",
+   "15:01","15:31","15:56",
+   "16:15","16:31","16:54",
+   "17:11","17:27","17:41","17:55",
+   {t:"18:13",note:"54"},"18:22","18:43",
+   "19:02","19:25","19:46",
+   "20:08","20:28","20:48",
+   "21:20","22:01"],
+  weekend:["06:00","06:25","06:49",
+   "07:10","07:31","07:52",
+   "08:06","08:20","08:36","08:50",
+   "09:05","09:20","09:35","09:50",
+   "10:05","10:19","10:35","10:50",
+   "11:06","11:18","11:34","11:52",
+   "12:10","12:30","12:50",
+   "13:10","13:30","13:50",
+   "14:10","14:30","14:48",
+   "15:09","15:30","15:50",
+   "16:11","16:29","16:47",
+   "17:08","17:30","17:49",
+   "18:12","18:31","18:50",
+   "19:10","19:30","19:55",
+   "20:20","20:53",
+   "21:27","22:02"]
+ },
+ "ＪＲ伊丹（標柱6）":{
+  weekday:[
+   {t:"06:08",note:"岩22"},{t:"06:28",note:"岩22"},{t:"06:56",note:"岩ク"},{t:"07:02",note:"31"},{t:"07:16",note:"岩22"},
+   {t:"07:26",note:"岩ク"},{t:"07:35",note:"31"},{t:"07:53",note:"岩22"},{t:"08:13",note:"31"},{t:"08:15",note:"岩22"},
+   {t:"08:32",note:"岩22"},{t:"08:50",note:"岩22"},{t:"09:15",note:"岩22"},{t:"09:32",note:"岩22"},{t:"09:52",note:"岩22"},
+   {t:"10:07",note:"31"},{t:"10:12",note:"岩22"},{t:"10:47",note:"岩22"},{t:"11:20",note:"31"},{t:"11:42",note:"岩22"},
+   {t:"12:29",note:"岩ク"},{t:"12:37",note:"31"},{t:"13:09",note:"岩22"},{t:"13:51",note:"岩22"},{t:"14:29",note:"31"},
+   {t:"14:31",note:"岩22"},{t:"15:12",note:"岩22"},{t:"15:41",note:"31"},{t:"15:52",note:"岩22"},{t:"16:12",note:"岩ク"},
+   {t:"16:43",note:"岩22"},{t:"16:52",note:"31"},{t:"17:16",note:"岩22"},{t:"17:28",note:"岩ク"},{t:"17:44",note:"31"},
+   {t:"17:57",note:"岩22"},{t:"18:22",note:"31"},{t:"18:30",note:"岩22"},{t:"19:02",note:"岩22"},{t:"19:04",note:"31"},
+   {t:"19:31",note:"岩22"},{t:"19:41",note:"31"},{t:"20:01",note:"岩22"},{t:"20:21",note:"31"},{t:"20:24",note:"岩22"},
+   {t:"21:13",note:"岩22"},{t:"21:27",note:"31"},{t:"22:01",note:"岩22"}
+  ],
+  weekend:[
+   {t:"06:06",note:"岩22"},{t:"06:54",note:"岩22"},{t:"07:08",note:"31"},{t:"07:16",note:"岩ク"},{t:"07:44",note:"岩22"},
+   {t:"08:10",note:"31"},{t:"08:12",note:"岩22"},{t:"08:40",note:"岩22"},{t:"09:08",note:"岩22"},{t:"09:37",note:"岩22"},
+   {t:"09:48",note:"31"},{t:"10:33",note:"岩22"},{t:"11:00",note:"31"},{t:"11:12",note:"岩22"},{t:"11:51",note:"岩22"},
+   {t:"12:08",note:"31"},{t:"12:13",note:"岩22"},{t:"12:48",note:"岩ク"},{t:"13:12",note:"岩22"},{t:"13:20",note:"31"},
+   {t:"13:56",note:"岩22"},{t:"14:21",note:"岩22"},{t:"14:52",note:"岩22"},{t:"15:16",note:"31"},{t:"15:20",note:"岩22"},
+   {t:"15:50",note:"岩22"},{t:"16:17",note:"岩ク"},{t:"16:26",note:"31"},{t:"16:48",note:"岩22"},{t:"17:18",note:"31"},
+   {t:"17:22",note:"岩22"},{t:"17:47",note:"岩22"},{t:"18:11",note:"岩22"},{t:"18:27",note:"31"},{t:"18:43",note:"岩22"},
+   {t:"19:08",note:"岩22"},{t:"19:16",note:"31"},{t:"20:02",note:"岩22"},{t:"20:22",note:"31"},{t:"20:30",note:"岩22"},
+   {t:"21:18",note:"岩22"},{t:"21:27",note:"31"},{t:"22:06",note:"岩22"}
+  ]
+ },
+ "野里（宝塚方面）":{
+  weekday:[{t:"09:40",note:"72"},{t:"11:40",note:"72"},{t:"13:40",note:"72"},{t:"15:40",note:"72"}],
+  weekend:[]
+ },
+ "緑ヶ丘7丁目（伊丹方面）":{
+  weekday:["06:28","06:59","07:34","08:10","09:06","10:42","11:53","13:10","15:03","16:14","17:49","18:20","19:00","19:50"],
+  weekend:["06:36","07:38","08:42","10:21","11:32","12:41","13:52","14:38","15:48","16:59","17:52","19:48","20:53"]
+ },
+ "緑ヶ丘7丁目（山本団地方面）":{
+  weekday:[{t:"07:12",note:"31"},{t:"07:45",note:"31"},{t:"08:23",note:"31"},{t:"10:17",note:"31"},{t:"11:30",note:"31"},{t:"12:47",note:"31"},{t:"14:39",note:"31"},{t:"15:51",note:"31"},{t:"17:02",note:"31"},{t:"17:54",note:"31"},{t:"18:32",note:"31"},{t:"19:14",note:"31"},{t:"19:51",note:"31"},{t:"20:31",note:"31"},{t:"21:37",note:"31"}],
+  weekend:[{t:"07:18",note:"31"},{t:"08:20",note:"31"},{t:"09:58",note:"31"},{t:"11:10",note:"31"},{t:"12:18",note:"31"},{t:"13:30",note:"31"},{t:"15:26",note:"31"},{t:"16:36",note:"31"},{t:"17:28",note:"31"},{t:"18:37",note:"31"},{t:"19:26",note:"31"},{t:"20:32",note:"31"},{t:"21:37",note:"31"}]
+ }
+};
+
+/* ===== ロジック ===== */
+
+/* 主に乗らない系統(次の便の候補から外す) */
+const MINOR={ "ＪＲ伊丹（標柱6）":["岩22","岩ク"], "大野（JR伊丹方面）":["54"] };
+
+/* ===== 共通ヘルパー ===== */
+const $=id=>document.getElementById(id);
+const eT=e=>typeof e==="string"?e:e.t;
+const eN=e=>typeof e==="string"?"":(e.note||"");
+const toSec=s=>{const[h,m]=s.split(":").map(Number);return h*3600+m*60;};
+const pad=n=>String(n).padStart(2,"0");
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const ymd=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+function fmtCD(sec){
+  if(sec>=3600){const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60);return `${h}時間${m}分`;}
+  if(sec>=60){const m=Math.floor(sec/60),s=sec%60;return `${m}分${pad(s)}秒`;}
+  return `${sec}秒`;
+}
+
+/* ===== 設定(端末に記憶) ===== */
+const STORAGE="busBoardV1";
+const stopKeys=Object.keys(busData);
+const COLORS=[["orange","オレンジ","#ff9f1c"],["green","グリーン","#3ddc84"],["white","ホワイト","#f2f2f2"],["cyan","シアン","#4dd0ff"]];
+function defaultCfg(){return {stops:stopKeys.slice(),color:"orange",dayMode:"auto",dayDate:"",night:true,shift:true,wake:true};}
+function loadCfg(){
+  const d=defaultCfg();
+  try{
+    const j=JSON.parse(localStorage.getItem(STORAGE)||"null");
+    if(j&&typeof j==="object"){
+      const c=Object.assign(d,j);
+      c.stops=(Array.isArray(j.stops)?j.stops:d.stops).filter(k=>busData[k]);
+      if(!COLORS.some(x=>x[0]===c.color)) c.color="orange";
+      return c;
+    }
+  }catch(e){}
+  return d;
+}
+function saveCfg(){try{localStorage.setItem(STORAGE,JSON.stringify(cfg));}catch(e){}}
+let cfg=loadCfg();
+
+/* ===== ダイヤ判定(曜日で自動、手動で上書き。上書きはその日限り) ===== */
+function dayIsAuto(now){return !(cfg.dayMode!=="auto" && cfg.dayDate===ymd(now));}
+function currentDay(now){
+  if(!dayIsAuto(now)) return cfg.dayMode;
+  const w=now.getDay(); return (w===0||w===6)?"weekend":"weekday";
+}
+function isNight(now){const h=now.getHours(); return h>=23||h<5;}
+
+/* ===== 次の便の算出(主に乗らない系統は除外) ===== */
+function upcomingFor(key,day,nowSec){
+  const arr=(busData[key]&&busData[key][day])||[];
+  const minor=MINOR[key]||[];
+  const list=arr.filter(e=>!minor.includes(eN(e)));
+  return {total:arr.length, up:list.filter(e=>toSec(eT(e))>nowSec).slice(0,3)};
+}
+function parseName(key){
+  const m=key.match(/^(.*?)（(.*)）$/);
+  return m?{name:m[1],dir:m[2]}:{name:key,dir:""};
+}
+function tagHTML(e){const n=eN(e);return n?`<span class="tg">${esc(n)}</span>`:"";}
+
+/* ===== 描画 ===== */
+let curDay=null, curDate="", targets=[];
+function selectedKeys(){return stopKeys.filter(k=>cfg.stops.includes(k));}
+
+function render(){
+  const now=new Date();
+  const nowSec=now.getHours()*3600+now.getMinutes()*60+now.getSeconds();
+  curDay=currentDay(now); curDate=ymd(now);
+  const grid=$("grid"); grid.innerHTML=""; targets=[];
+  const keys=selectedKeys();
+
+  if(!keys.length){
+    grid.innerHTML=`<div id="empty">停留所が選ばれていません。<br>右上の歯車から選んでください。</div>`;
+  }
+  keys.forEach(key=>{
+    const {total,up}=upcomingFor(key,curDay,nowSec);
+    const p=parseName(key);
+    let body="";
+    if(!total){
+      body=`<div class="msg">この曜日は運行なし</div>`;
+    }else if(!up.length){
+      body=`<div class="msg">本日の運行は終了</div>`;
+    }else{
+      const head=up[0], rest=up.slice(1), sec=toSec(eT(head));
+      targets.push(sec);
+      body=`<div class="r2"><span class="tm num">${eT(head)}</span>${tagHTML(head)}`+
+        `<span class="cd${sec-nowSec<=180?" soon":""}"><b data-t="${sec}">${fmtCD(sec-nowSec)}</b><i>後</i></span></div>`+
+        `<div class="r3">`+(rest.length
+          ? `<span>次</span>`+rest.map(e=>`<span class="num">${eT(e)}</span>${tagHTML(e)}`).join("")
+          : `<span>この便が最終です</span>`)+`</div>`;
+    }
+    const card=document.createElement("div");
+    card.className="card";
+    card.innerHTML=`<div class="in"><div class="r1"><span class="nm">${esc(p.name)}</span>`+
+      (p.dir?`<span class="dr">${esc(p.dir)}</span>`:"")+`</div>${body}</div>`;
+    grid.appendChild(card);
+  });
+  updateBadge(now);
+  layout();
+}
+
+/* ===== レイアウト(向き・停留所数に合わせて列数と文字の大きさを自動決定) ===== */
+const VARIANTS=[{name:"wide",w:11.6,h:4.5},{name:"stack",w:7.8,h:5.4}];
+const GAP=8, HEAD=52;
+function layout(){
+  const grid=$("grid"), n=grid.querySelectorAll(".card").length;
+  if(!n){grid.classList.remove("stack");grid.style.gridTemplateColumns="1fr";grid.style.gridTemplateRows="1fr";grid.style.fontSize="16px";return;}
+  const W=window.innerWidth, H=window.innerHeight-HEAD;
+  let best={base:-1,cols:1,rows:n,v:VARIANTS[0].name};
+  VARIANTS.forEach(v=>{
+    for(let cols=1;cols<=n;cols++){
+      const rows=Math.ceil(n/cols);
+      const cw=(W-GAP*(cols+1))/cols, ch=(H-GAP*(rows+1))/rows;
+      const base=Math.min(cw/v.w, ch/v.h);
+      if(base>best.base+0.01) best={base,cols,rows,v:v.name};
+    }
+  });
+  const base=Math.max(8,Math.min(best.base,90));
+  grid.classList.toggle("stack",best.v==="stack");
+  grid.style.gridTemplateColumns=`repeat(${best.cols},minmax(0,1fr))`;
+  grid.style.gridTemplateRows=`repeat(${best.rows},minmax(0,1fr))`;
+  grid.style.fontSize=base+"px";
+  grid.dataset.cols=best.cols; grid.dataset.rows=best.rows; grid.dataset.base=base.toFixed(1); grid.dataset.variant=best.v;
+  lastSize=window.innerWidth+"x"+window.innerHeight;
+}
+let lastSize="";
+
+/* ===== ヘッダー(時計・ダイヤ表示) ===== */
+function updateBadge(now){
+  const label=curDay==="weekend"?"土日祝ダイヤ":"平日ダイヤ";
+  $("badge").textContent=label+(dayIsAuto(now)?"":"(手動)");
+}
+function applyNight(now){document.body.classList.toggle("night", !!cfg.night && isNight(now));}
+function applyColor(){document.documentElement.setAttribute("data-color",cfg.color);}
+
+/* ===== 1秒ごとの更新 ===== */
+function tick(){
+  const now=new Date();
+  const nowSec=now.getHours()*3600+now.getMinutes()*60+now.getSeconds();
+  $("clock").textContent=`${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+  applyNight(now);
+  /* 向きや全画面の切替でresizeが届かない端末への保険 */
+  if(window.innerWidth+"x"+window.innerHeight!==lastSize) layout();
+  if(ymd(now)!==curDate || currentDay(now)!==curDay || targets.some(t=>nowSec>=t)){render();return;}
+  document.querySelectorAll(".cd b").forEach(b=>{
+    const left=Math.max(0,Number(b.dataset.t)-nowSec);
+    b.textContent=fmtCD(left);
+    b.parentNode.classList.toggle("soon",left<=180);
+  });
+}
+
+/* ===== 焼き付き対策(表示を少しずつずらす) ===== */
+const OFFS=[[0,0],[5,3],[-5,2],[3,-5],[-4,-3]];
+let shiftIdx=0;
+function applyShift(){
+  const o=cfg.shift?OFFS[shiftIdx]:[0,0];
+  $("stage").style.transform=(o[0]||o[1])?`translate(${o[0]}px,${o[1]}px)`:"";
+}
+function shiftNext(){shiftIdx=(shiftIdx+1)%OFFS.length; applyShift();}
+setInterval(shiftNext,180000);
+
+/* ===== 画面を消さない(Wake Lock) ===== */
+let wakeLock=null, wakeState="off";
+function updateWakeUI(){
+  const m={off:"",on:"有効です(表示中は画面を消しません)",
+    unsupported:"このブラウザは非対応です。端末のスリープ設定を最長にしてください",
+    lost:"解除されました。画面をタップすると再取得します",
+    error:"取得できませんでした。画面をタップすると再試行します"};
+  $("wakeState").textContent=cfg.wake?(m[wakeState]||""):"";
+}
+async function requestWake(){
+  if(!cfg.wake){await releaseWake();return;}
+  if(!("wakeLock" in navigator)){wakeState="unsupported";updateWakeUI();return;}
+  try{
+    wakeLock=await navigator.wakeLock.request("screen");
+    wakeState="on";
+    wakeLock.addEventListener("release",()=>{wakeState=cfg.wake?"lost":"off";updateWakeUI();});
+  }catch(e){wakeState="error";}
+  updateWakeUI();
+}
+async function releaseWake(){
+  try{if(wakeLock)await wakeLock.release();}catch(e){}
+  wakeLock=null; wakeState="off"; updateWakeUI();
+}
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&cfg.wake)requestWake();});
+document.addEventListener("click",()=>{if(cfg.wake&&wakeState!=="on"&&wakeState!=="unsupported")requestWake();});
+
+/* ===== 全画面 ===== */
+function fsElement(){return document.fullscreenElement||document.webkitFullscreenElement||null;}
+function toggleFull(){
+  try{
+    if(fsElement()){(document.exitFullscreen||document.webkitExitFullscreen).call(document);}
+    else{const el=document.documentElement;const f=el.requestFullscreen||el.webkitRequestFullscreen;
+      if(f){const p=f.call(el);if(p&&p.catch)p.catch(()=>{});}}
+  }catch(e){}
+}
+function updateFsBtn(){$("fsBtn").textContent=fsElement()?"全画面を終了する":"全画面にする";}
+document.addEventListener("fullscreenchange",()=>{updateFsBtn();layout();});
+document.addEventListener("webkitfullscreenchange",()=>{updateFsBtn();layout();});
+
+/* ===== 設定パネル ===== */
+function buildPanel(){
+  $("stopList").innerHTML=stopKeys.map((k,i)=>
+    `<label><input type="checkbox" data-i="${i}"${cfg.stops.includes(k)?" checked":""}>${esc(k)}</label>`).join("");
+  $("colors").innerHTML=COLORS.map(c=>
+    `<button type="button" data-c="${c[0]}" aria-pressed="${cfg.color===c[0]}"><i style="background:${c[2]}"></i>${c[1]}</button>`).join("");
+  syncPanel();
+}
+function syncPanel(){
+  const now=new Date(), mode=dayIsAuto(now)?"auto":cfg.dayMode;
+  document.querySelectorAll("#daySeg button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.mode===mode)));
+  document.querySelectorAll("#colors button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.c===cfg.color)));
+  $("optWake").checked=!!cfg.wake; $("optShift").checked=!!cfg.shift; $("optNight").checked=!!cfg.night;
+  updateWakeUI(); updateFsBtn();
+}
+function setStops(list){cfg.stops=stopKeys.filter(k=>list.includes(k)); saveCfg(); render();}
+function openPanel(){buildPanel();$("panelWrap").classList.add("open");}
+function closePanel(){$("panelWrap").classList.remove("open");}
+
+$("gear").onclick=openPanel;
+$("pclose").onclick=closePanel;
+$("panelWrap").addEventListener("click",e=>{if(e.target===$("panelWrap"))closePanel();});
+$("stopList").addEventListener("change",e=>{
+  if(e.target.tagName!=="INPUT")return;
+  const list=[...document.querySelectorAll("#stopList input")].filter(x=>x.checked).map(x=>stopKeys[Number(x.dataset.i)]);
+  setStops(list);
+});
+$("selAll").onclick=()=>{setStops(stopKeys);buildPanel();};
+$("selNone").onclick=()=>{setStops([]);buildPanel();};
+$("colors").addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b)return;
+  cfg.color=b.dataset.c; saveCfg(); applyColor(); syncPanel();
+});
+$("daySeg").addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b)return;
+  cfg.dayMode=b.dataset.mode; cfg.dayDate=(b.dataset.mode==="auto")?"":ymd(new Date());
+  saveCfg(); render(); syncPanel();
+});
+$("optWake").onchange=e=>{cfg.wake=e.target.checked; saveCfg(); requestWake();};
+$("optShift").onchange=e=>{cfg.shift=e.target.checked; saveCfg(); applyShift();};
+$("optNight").onchange=e=>{cfg.night=e.target.checked; saveCfg(); applyNight(new Date());};
+$("fsBtn").onclick=toggleFull;
+
+window.addEventListener("resize",layout);
+window.addEventListener("orientationchange",()=>setTimeout(layout,200));
+
+/* ===== 起動 ===== */
+applyColor();
+render();
+applyNight(new Date());
+tick();
+requestWake();
+setInterval(tick,1000);
+</script>
+</body>
+</html>
