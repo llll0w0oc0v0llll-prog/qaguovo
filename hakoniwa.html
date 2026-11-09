@@ -14,28 +14,18 @@
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0;height:100%}
-body{
-  background:var(--bg); color:var(--tx); font-family:var(--fontjp);
-  font-size:15px; line-height:1.5; overscroll-behavior:none;
-  padding-env:0;
-}
+body{background:var(--bg);color:var(--tx);font-family:var(--fontjp);font-size:15px;line-height:1.5;overscroll-behavior:none}
 button{font-family:var(--fontjp);font-size:14px;color:var(--tx);cursor:pointer}
 h1,h2,h3{margin:0 0 8px;font-weight:700}
 .hide{display:none !important}
-
-/* ---------- レイアウト ---------- */
 #app{max-width:960px;margin:0 auto;padding:8px 8px 24px}
-.topbar{
-  position:sticky;top:0;z-index:30;background:linear-gradient(180deg,#0e1520 70%,rgba(14,21,32,.85));
-  padding:6px 0 8px;border-bottom:1px solid var(--line);margin-bottom:8px;
-}
+.topbar{position:sticky;top:0;z-index:30;background:linear-gradient(180deg,#0e1520 70%,rgba(14,21,32,.85));padding:6px 0 8px;border-bottom:1px solid var(--line);margin-bottom:8px}
 .stats{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
 .stat{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:4px 3px;text-align:center;min-width:0}
 .stat .k{font-size:10px;color:var(--tx2);white-space:nowrap}
 .stat .v{font-size:14px;font-weight:700;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.stat .d{font-size:9px;color:var(--tx2)}
-.v.up{color:var(--ok)} .v.dn{color:var(--bad)}
-
+.stat .d{font-size:9px;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.v.dn{color:var(--bad)} .v.up{color:var(--ok)}
 .timebar{display:flex;gap:4px;align-items:center;margin-top:6px;flex-wrap:wrap}
 .spd{flex:1;display:flex;gap:3px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:3px}
 .spd button{flex:1;background:transparent;border:0;border-radius:6px;padding:6px 2px;font-size:12px;font-weight:700;color:var(--tx2)}
@@ -45,57 +35,52 @@ h1,h2,h3{margin:0 0 8px;font-weight:700}
 .btn.primary{background:var(--acc2);border-color:var(--acc);color:#fff}
 .btn.ghost{background:transparent}
 .btn:disabled{opacity:.35;cursor:not-allowed}
-
 .tabs{display:flex;gap:4px;margin:8px 0 6px}
 .tabs button{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 4px;font-weight:700;color:var(--tx2);font-size:13px}
 .tabs button.on{background:var(--panel2);color:var(--tx);border-color:var(--acc)}
-
 .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px}
-.card h3{font-size:13px;color:var(--tx2);letter-spacing:.05em}
 
-/* ---------- マップ ---------- */
-#mapwrap{display:flex;justify-content:center}
-#map{display:grid;gap:2px;width:100%;max-width:520px}
-.cell{
-  position:relative;aspect-ratio:1/1;border-radius:4px;display:flex;
-  align-items:center;justify-content:center;font-family:var(--fontemoji);
-  font-size:clamp(11px,3.6vw,22px);background:#12324f;border:1px solid transparent;
-  user-select:none;overflow:hidden;
-}
-.cell.land{background:#2f4a2c}
-.cell.sea{background:#0f3554}
-.cell.shoal{background:#1c5c86}
-.cell.plain{background:#4a7a3f}
-.cell.waste{background:#6d5c3c}
-.cell.sel{border-color:var(--gold);box-shadow:0 0 0 2px rgba(255,212,94,.45) inset}
-.cell .lv{position:absolute;right:1px;bottom:0;font-family:var(--fontjp);font-size:9px;font-weight:700;color:#fff;text-shadow:0 0 3px #000,0 0 2px #000}
-.cell.hit{animation:hit .5s ease}
+/* ---------- ヘックスマップ ---------- */
+.hexwrap{position:relative;width:100%;max-width:540px;margin:0 auto}
+.hexmap{position:relative;width:100%;height:0}
+.hex{position:absolute;clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+  display:flex;align-items:center;justify-content:center;font-family:var(--fontemoji);
+  background:#0f3554;overflow:hidden;user-select:none;line-height:1}
+.hex.sea{background:#0f3554}
+.hex.shoal{background:#1c5c86}
+.hex.plain{background:#4a7a3f}
+.hex.waste{background:#6d5c3c}
+.hex.land{background:#2f4a2c}
+.hex.sel{background-image:linear-gradient(rgba(255,212,94,.42),rgba(255,212,94,.42))}
+.hex .lv{position:absolute;bottom:6%;left:0;right:0;text-align:center;font-family:var(--fontjp);
+  font-weight:700;color:#fff;text-shadow:0 0 3px #000,0 0 2px #000}
+.hex.hit{animation:hit .6s ease}
 @keyframes hit{0%{filter:brightness(3) saturate(2)}100%{filter:none}}
-
-.legend{display:flex;flex-wrap:wrap;gap:6px;font-size:11px;color:var(--tx2);margin-top:6px;justify-content:center}
+.legend{display:flex;flex-wrap:wrap;gap:6px;font-size:11px;color:var(--tx2);margin:2px 0 8px;justify-content:center}
 .legend span{white-space:nowrap}
 
-/* ---------- コマンド ---------- */
-.tileinfo{display:flex;align-items:center;gap:8px;margin-bottom:8px;min-height:34px}
-.tileinfo .big{font-family:var(--fontemoji);font-size:26px}
-.tileinfo .t{font-weight:700}
-.tileinfo .s{font-size:12px;color:var(--tx2)}
-.cmds{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:6px}
-.cmd{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:7px 6px;text-align:left;line-height:1.25}
-.cmd .n{font-weight:700;font-size:13px}
-.cmd .c{font-size:10px;color:var(--tx2)}
-.cmd:disabled{opacity:.3}
-.cmd.danger{border-color:#6b3230}
+/* ---------- コマンド（マップ直下・コンパクト） ---------- */
+#cmdcard{margin-top:8px;padding:8px}
+.tileinfo{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;min-height:30px}
+.tileinfo .big{font-family:var(--fontemoji);font-size:24px;line-height:1.1}
+.tileinfo .t{font-weight:700;font-size:14px}
+.tileinfo .s{font-size:11.5px;color:var(--tx2);line-height:1.45}
+.cmds{display:grid;grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:5px}
+.cmd{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:6px 6px;text-align:left;line-height:1.25}
+.cmd .n{font-weight:700;font-size:13px;white-space:nowrap}
+.cmd .n small{font-weight:400;font-size:10.5px;color:var(--tx2);margin-left:3px}
+.cmd .c{font-size:10px;color:var(--tx2);margin-top:1px}
+.cmd:disabled{opacity:.35}
+.cmd.danger{border-color:#8a3a36;background:#2a1a1d}
+.cmdsub{font-size:10.5px;color:var(--tx2);margin:8px 0 4px;letter-spacing:.05em}
+.empty{font-size:12px;color:var(--tx2);padding:4px 2px}
 
-/* ---------- ログ ---------- */
-#log{max-height:210px;overflow-y:auto;font-size:12.5px;-webkit-overflow-scrolling:touch}
+#log{max-height:220px;overflow-y:auto;font-size:12.5px;-webkit-overflow-scrolling:touch}
 .le{padding:4px 6px;border-left:3px solid var(--line);margin-bottom:3px;background:#131c28;border-radius:0 5px 5px 0}
 .le .t{color:var(--tx2);font-size:10px;margin-right:5px}
 .le.bad{border-left-color:var(--bad)} .le.good{border-left-color:var(--ok)}
 .le.warn{border-left-color:var(--warn)} .le.info{border-left-color:var(--acc)}
-.le.cpu{opacity:.75}
-
-/* ---------- 順位表 ---------- */
+.le.cpu{opacity:.72}
 table{width:100%;border-collapse:collapse;font-size:12.5px}
 th,td{padding:5px 4px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
 th{color:var(--tx2);font-size:11px;font-weight:600}
@@ -104,8 +89,6 @@ tr.me{background:rgba(78,168,255,.12)}
 tr.me td{font-weight:700}
 tr.dead{opacity:.4;text-decoration:line-through}
 .bar{height:4px;background:var(--acc);border-radius:2px;margin-top:2px}
-
-/* ---------- モーダル ---------- */
 .modal{position:fixed;inset:0;background:rgba(6,10,16,.86);z-index:100;display:flex;align-items:center;justify-content:center;padding:12px;overflow-y:auto}
 .sheet{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;max-width:520px;width:100%;max-height:92vh;overflow-y:auto}
 .sheet h1{font-size:22px;text-align:center;letter-spacing:.06em}
@@ -121,47 +104,43 @@ input[type=text]{width:100%;background:var(--panel2);border:1px solid var(--line
 .rowbtn{display:flex;gap:6px;margin-top:6px}
 .rowbtn .btn{flex:1;text-align:center}
 .note{font-size:11px;color:var(--tx2);line-height:1.6}
+.contbox{background:#13283d;border:1px solid var(--acc2);border-radius:10px;padding:10px;margin-bottom:12px}
+.contbox .btn{width:100%}
+.credit{font-size:10.5px;color:#6e819a;line-height:1.6;margin-top:14px;padding-top:10px;border-top:1px solid var(--line)}
 .evt{font-family:var(--fontemoji);font-size:44px;text-align:center;display:block;margin-bottom:4px}
 .help h4{margin:12px 0 4px;font-size:13px;color:var(--acc)}
 .help p,.help li{font-size:12.5px;color:#cbd8e8;margin:3px 0}
 .help ul{padding-left:18px;margin:4px 0}
+.help table{margin:6px 0;font-size:11.5px}
 #toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#0b1220ee;border:1px solid var(--line);border-radius:20px;padding:8px 16px;font-size:13px;z-index:200;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw;text-align:center}
 #toast.on{opacity:1}
-@media(max-width:420px){
-  .stats{grid-template-columns:repeat(3,1fr)}
-  #app{padding:6px 6px 20px}
-}
+@media(max-width:420px){ .stats{grid-template-columns:repeat(3,1fr)} #app{padding:6px 6px 20px} }
 </style>
 </head>
 <body>
 <div id="app">
-  <!-- ===== 上部ステータス ===== -->
   <div class="topbar">
     <div class="stats" id="stats"></div>
     <div class="timebar">
       <div class="spd" id="spd">
-        <button data-s="0">停止</button>
-        <button data-s="1">1x</button>
-        <button data-s="2">2x</button>
-        <button data-s="5">5x</button>
-        <button data-s="10">10x</button>
+        <button data-s="0">停止</button><button data-s="1">1x</button>
+        <button data-s="2">2x</button><button data-s="5">5x</button><button data-s="10">10x</button>
       </div>
       <button class="btn primary" id="btnTurn">ターン終了</button>
       <button class="btn ghost" id="btnMenu">≡</button>
     </div>
   </div>
 
-  <!-- ===== マップ ===== -->
-  <div id="mapwrap"><div id="map"></div></div>
-  <div class="legend" id="legend"></div>
+  <div class="hexwrap"><div class="hexmap" id="map"></div></div>
 
-  <!-- ===== コマンド ===== -->
-  <div class="card">
-    <div class="tileinfo" id="tileinfo"><span class="s">マスをタップして開発コマンドを選びます</span></div>
-    <div class="cmds" id="cmds"></div>
+  <!-- コマンドはマップのすぐ下：スクロールの往復をなくす -->
+  <div class="card" id="cmdcard">
+    <div class="tileinfo" id="tileinfo"></div>
+    <div id="cmds"></div>
   </div>
 
-  <!-- ===== タブ ===== -->
+  <div class="legend" id="legend"></div>
+
   <div class="tabs">
     <button data-tab="log" class="on">📰 ニュース</button>
     <button data-tab="rank">🏆 順位表</button>
@@ -171,65 +150,55 @@ input[type=text]{width:100%;background:var(--panel2);border:1px solid var(--line
   <div class="card hide" id="pane-rank"><div id="rank"></div></div>
   <div class="card hide" id="pane-isl">
     <div class="opts" id="islSel" style="margin-bottom:8px"></div>
-    <div id="mapwrap2" style="display:flex;justify-content:center"><div id="map2" style="display:grid;gap:2px;width:100%;max-width:420px"></div></div>
-    <div id="islInfo" class="note" style="margin-top:8px;text-align:center"></div>
+    <div class="hexwrap" style="max-width:430px"><div class="hexmap" id="map2"></div></div>
+    <div id="islInfo" class="note" style="margin-top:10px;text-align:center"></div>
   </div>
 </div>
-
 <div id="toast"></div>
 
-<!-- ===== タイトル ===== -->
+<!-- タイトル -->
 <div class="modal" id="mTitle">
   <div class="sheet">
     <h1>🏝️ 箱 庭 列 島 🏝️</h1>
-    <div class="sub">ひとり用・オフライン島開発シミュレーション</div>
-    <div class="field">
-      <label>島の名前</label>
-      <input type="text" id="inName" value="おだんご島" maxlength="12">
+    <div class="sub">ひとり用・オフライン島開発シミュレーション　v2.1</div>
+    <div class="contbox hide" id="contBox">
+      <button class="btn primary" id="btnCont">▶ 続きから</button>
+      <div class="note" id="contNote" style="margin-top:6px"></div>
     </div>
-    <div class="field">
-      <label>マップ規模</label>
-      <div class="opts" id="optSize"></div>
-    </div>
-    <div class="field">
-      <label>ライバル島（CPU）の数</label>
-      <div class="opts" id="optCpu"></div>
-    </div>
-    <div class="field">
-      <label>ゲームの目標</label>
-      <div class="opts" id="optGoal"></div>
-      <div class="note" id="goalNote" style="margin-top:5px"></div>
-    </div>
-    <div class="field">
-      <label>難易度（災害の激しさ）</label>
-      <div class="opts" id="optDiff"></div>
-    </div>
-    <div class="rowbtn">
-      <button class="btn primary" id="btnStart">▶ 開拓を始める</button>
-    </div>
-    <div class="rowbtn">
-      <button class="btn" id="btnLoadT">📂 セーブ読込</button>
-      <button class="btn" id="btnHelpT">❔ 遊び方</button>
-    </div>
+    <div class="field"><label>島の名前</label><input type="text" id="inName" value="おだんご島" maxlength="12"></div>
+    <div class="field"><label>マップ規模</label><div class="opts" id="optSize"></div></div>
+    <div class="field"><label>ライバル島（CPU）の数</label><div class="opts" id="optCpu"></div></div>
+    <div class="field"><label>ゲームの目標</label><div class="opts" id="optGoal"></div>
+      <div class="note" id="goalNote" style="margin-top:5px"></div></div>
+    <div class="field"><label>難易度（災害の激しさ）</label><div class="opts" id="optDiff"></div></div>
+    <div class="field"><label>CPUの強さ</label><div class="opts" id="optAi"></div>
+      <div class="note" id="aiNote" style="margin-top:5px"></div>
+      <div class="opts" id="optVary" style="margin-top:5px"></div></div>
+    <div class="rowbtn"><button class="btn primary" id="btnStart">▶ 新しく開拓を始める</button></div>
+    <div class="rowbtn"><button class="btn" id="btnLoadT">📂 セーブ読込</button><button class="btn" id="btnHelpT">❔ 遊び方</button></div>
+    <p class="credit">原案：<b>箱庭諸島</b>（作：徳岡宏樹）<br>
+      本作は同作の遊び心地と経済・災害モデルを参考に、一から書き起こしたオリジナル実装です。
+      原作の画像・スクリプトは一切含んでいません。</p>
     <input type="file" id="fileIn" accept=".json,application/json" class="hide">
   </div>
 </div>
 
-<!-- ===== メニュー ===== -->
+<!-- メニュー -->
 <div class="modal hide" id="mMenu">
   <div class="sheet">
     <h2>メニュー</h2>
-    <div class="rowbtn"><button class="btn" id="btnPause">⏸ 大災害で自動停止：ON</button></div>
+    <p class="note" id="saveState" style="margin:0 0 6px"></p>
+    <div class="rowbtn"><button class="btn" id="btnPause">大災害で自動停止：ON</button></div>
     <div class="rowbtn"><button class="btn" id="btnSave">💾 セーブを書き出す</button></div>
     <div class="rowbtn"><button class="btn" id="btnLoad">📂 セーブを読み込む</button></div>
     <div class="rowbtn"><button class="btn" id="btnHelp">❔ 遊び方</button></div>
     <div class="rowbtn"><button class="btn" id="btnTitle">🏝️ タイトルへ戻る</button></div>
     <div class="rowbtn"><button class="btn primary" id="btnClose">閉じる</button></div>
-    <p class="note" style="margin-top:10px">セーブはJSONファイルとして端末に保存されます。ブラウザを閉じても、その JSON を読み込めば続きから遊べます。</p>
+    <p class="note" style="margin-top:10px">メニューを開いている間は時間が止まります。書き出したJSONファイルは、別の端末やブラウザでも読み込めます。</p>
   </div>
 </div>
 
-<!-- ===== イベント通知 ===== -->
+<!-- イベント -->
 <div class="modal hide" id="mEvent">
   <div class="sheet" style="max-width:400px;text-align:center">
     <span class="evt" id="evIcon">🌀</span>
@@ -240,46 +209,81 @@ input[type=text]{width:100%;background:var(--panel2);border:1px solid var(--line
   </div>
 </div>
 
-<!-- ===== 結果 ===== -->
+<!-- 結果 -->
 <div class="modal hide" id="mEnd">
   <div class="sheet" style="text-align:center">
     <span class="evt" id="endIcon">🏆</span>
     <h2 id="endTitle" style="text-align:center"></h2>
     <div id="endBody"></div>
-    <div class="rowbtn">
-      <button class="btn" id="endCont">▶ このまま続ける</button>
-      <button class="btn primary" id="endNew">🏝️ タイトルへ</button>
-    </div>
+    <div class="rowbtn"><button class="btn" id="endCont">▶ このまま続ける</button>
+      <button class="btn primary" id="endNew">🏝️ タイトルへ</button></div>
   </div>
 </div>
 
-<!-- ===== ヘルプ ===== -->
+<!-- ヘルプ -->
 <div class="modal hide" id="mHelp">
   <div class="sheet help">
     <h2>遊び方</h2>
-    <h4>■ 基本の流れ</h4>
-    <p>マップのマスをタップ → コマンドを選ぶ、を繰り返して島を育てます。コマンドは<b>資金</b>と<b>行動力（AP）</b>を消費します。APは毎ターン回復します。</p>
+    <h4>■ 目的</h4>
+    <p>島を開発して<b>人口</b>を増やします。順位も勝敗も人口の一本勝負です。資金も食料も、人を増やすための手段にすぎません。</p>
+
+    <h4>■ 操作</h4>
+    <ul>
+      <li>マスをタップすると、マップのすぐ下に<b>そのマスで使えるコマンドだけ</b>が出ます。同じマスをもう一度タップすると選択解除</li>
+      <li>「島全体」の欄（誘致活動・食料輸出・自衛隊）はマスを選ばなくても使えます</li>
+      <li>進行状況は<b>毎ターン自動で保存</b>され、タイトル画面の「続きから」で再開できます</li>
+    </ul>
+
+    <h4>■ 経済のしくみ（ここが肝心）</h4>
+    <p><b>人口はそのまま労働力です。</b>毎ターン、まず農場が必要とするぶんの人手が農業に取られ、<b>余った人手が工業に回って資金を生みます</b>。</p>
+    <ul>
+      <li>農場の規模合計×10 が、農業に必要な人手</li>
+      <li>人口がそれを超えていれば、農場はフル稼働して食料を生産。あぶれた人手÷10 が資金になります（ただし工場と採掘場の規模合計が上限）</li>
+      <li>人口が足りなければ全員が野良仕事に回り、<b>資金収入はゼロ</b>。工場をいくら建てても無駄になります</li>
+      <li>食料消費は人口×0.2。余った食料は上限9999で頭打ちになり、超過分は1/10のレートで資金に換わります</li>
+    </ul>
+    <p>つまり<b>農場を広げすぎると工業が死に、町を増やさないと何も回りません</b>。三者の釣り合いを探すゲームです。</p>
+
+    <h4>■ 町は勝手に育つ</h4>
+    <ul>
+      <li>町マスは毎ターン人口が増え、10,000人で<b>都市</b>になります（そこから先の伸びは非常に遅い）</li>
+      <li>平地は1/5の確率で、隣に育った町か農場があれば<b>自然に村が生まれます</b>。放置していても島は育ちます</li>
+      <li>森も毎ターン育ち、伐採で得られる木材収入は<b>樹齢に比例</b>します（5×樹齢）。老木ほど高く売れます</li>
+      <li>食料が尽きると人口が激減し、農場と工場が1/4の確率で壊滅します</li>
+    </ul>
+
+    <h4>■ 災害は「配置」で防ぐ</h4>
+    <p>災害は運ではなく、<b>どこに何を置いたか</b>で被害が決まります。</p>
+    <table>
+      <tr><th class="nm">災害</th><th class="nm">判定と対策</th></tr>
+      <tr><td class="nm">🔥 火災</td><td class="nm">町・工場が毎ターン1%。<b>隣接6マスに森が1つも無ければ全壊</b>。森が防火帯になります</td></tr>
+      <tr><td class="nm">🌀 台風</td><td class="nm">農場が被害。<b>隣接する森の数だけ</b>耐えやすくなります</td></tr>
+      <tr><td class="nm">🌊 津波</td><td class="nm"><b>隣接する海の数−1</b> で判定。突き出た岬ほど危険、内陸は安全。マップの外は外洋です</td></tr>
+      <tr><td class="nm">🌐 地震</td><td class="nm">都市と工場が1/4で全壊。避けようがありません</td></tr>
+      <tr><td class="nm">🕳️ 地盤沈下</td><td class="nm">面積が上限を超えると発生し、<b>海に接する陸地が丸ごと浅瀬に沈みます</b>。埋め立てすぎへの罰です</td></tr>
+      <tr><td class="nm">👾 怪獣</td><td class="nm">人口10万人を超えると、面積に比例して出現。通り道を荒地に変えます。怪獣のいるマスには手を出せません</td></tr>
+    </table>
+
+    <h4>■ 土地を増やす／減らす</h4>
+    <ul>
+      <li>埋め立ては<b>海→浅瀬→荒地</b>の2段階。陸に隣接したマスのみ。掘削はその逆です</li>
+      <li>整地には1%で<b>埋蔵金</b>（100〜1000）が出ます</li>
+      <li>山は整地できません。掘削で荒地に変えるか、採掘場として資金源に育てます</li>
+    </ul>
+
     <h4>■ 時間の進め方（ハイブリッド）</h4>
     <ul>
-      <li><b>ターン終了</b>ボタン … 好きなタイミングで1ターン進めます。</li>
-      <li><b>1x〜10x</b> … 放置しておくと自動でターンが進みます。数字が大きいほど高速。</li>
-      <li><b>⏸</b> … 自動進行を止めます。じっくり考えたいときに。</li>
-      <li>自動進行中でもコマンドは自由に入力できます。</li>
+      <li><b>ターン終了</b>で1ターンずつ。<b>1x〜10x</b>で放置自動進行。<b>停止</b>でじっくり考える</li>
+      <li>コマンドは資金と<b>行動力（AP）</b>を消費し、APは毎ターン回復します</li>
+      <li>メニューや遊び方を開いている間は、自動進行も止まります</li>
     </ul>
-    <h4>■ 経済のしくみ</h4>
-    <ul>
-      <li>🌾<b>農場</b>… 食料を生産。食料が尽きると飢饉で人口が激減します。</li>
-      <li>🏭<b>工場</b>… 資金を生産。ただし隣接する農場の生産をわずかに下げます（公害）。</li>
-      <li>🏘️<b>町</b>…人口が住みます。人口は税収とスコアの柱。Lv4以上で🏙️都市に発展。</li>
-      <li>🌲<b>森</b>… 観光収入＋台風被害の軽減。伐採すれば木材収入になります。</li>
-      <li>🧱<b>防波堤</b>… 隣接マスを津波・高潮から守ります。</li>
-    </ul>
-    <h4>■ 災害</h4>
-    <p>毎ターン一定確率で台風・地震・津波・噴火・怪獣・疫病などが発生します。怪獣には資金を払って<b>自衛隊を出動</b>させられます。放置すると毎ターン島を破壊し続けます。</p>
-    <h4>■ CPUの島</h4>
-    <p>ライバル島も同じルールで開発し、同じように災害に遭います。「他島を見る」タブから覗けます。</p>
+
+    <h4>■ CPUの島と強さ</h4>
+    <p>ライバル島も同じルールで開発し、同じ災害に遭います。タイトル画面の「CPUの強さ」で、手数（行動力3/5/7）、判断の質、経済倍率、開始時の優位が同時に変わります。「島ごとにばらつく」をONにすると順位表に<b>弱・並・強</b>のバッジが付きます。</p>
+
     <h4>■ このバージョンについて</h4>
-    <p>軍事（ミサイル・PvPバトルモード）は次バージョン予定のため未実装です。現在は内政と災害でスコアを競います。</p>
+    <p>軍事（ミサイル・PvPバトルモード）は次バージョン予定のため未実装です。</p>
+    <p style="color:#6e819a;font-size:11px;margin-top:10px">原案：箱庭諸島（作：徳岡宏樹）。本作は同作の経済・災害モデルを参考にした独自実装で、原作の画像やスクリプトは含みません。</p>
     <div class="rowbtn"><button class="btn primary" id="helpOk">閉じる</button></div>
   </div>
 </div>
@@ -287,373 +291,395 @@ input[type=text]{width:100%;background:var(--panel2);border:1px solid var(--line
 <script>
 "use strict";
 /* =========================================================
-   箱庭列島 - Core
+   箱庭列島 v2.1 — ヘックスマップ／労働力経済／地形依存災害
+   原案：箱庭諸島（徳岡宏樹）／本実装はオリジナル
    ========================================================= */
 
-/* ---------- 乱数（シード付き） ---------- */
+/* ---------- 乱数 ---------- */
 let _seed = 12345;
-function srand(s){ _seed = (s>>>0) || 1; }
-function rnd(){ // mulberry32
-  _seed |= 0; _seed = (_seed + 0x6D2B79F5) | 0;
-  let t = Math.imul(_seed ^ (_seed>>>15), 1 | _seed);
-  t = (t + Math.imul(t ^ (t>>>7), 61 | t)) ^ t;
-  return ((t ^ (t>>>14))>>>0) / 4294967296;
-}
-const ri = (a,b)=> a + Math.floor(rnd()*(b-a+1));
-const pick = arr => arr[Math.floor(rnd()*arr.length)];
+function srand(s){ _seed=(s>>>0)||1; }
+function rnd(){ _seed|=0; _seed=(_seed+0x6D2B79F5)|0;
+  let t=Math.imul(_seed^(_seed>>>15),1|_seed);
+  t=(t+Math.imul(t^(t>>>7),61|t))^t;
+  return ((t^(t>>>14))>>>0)/4294967296; }
+const ri=(a,b)=>a+Math.floor(rnd()*(b-a+1));
+const rint=n=>Math.floor(rnd()*n);          // 0..n-1
+const pick=a=>a[Math.floor(rnd()*a.length)];
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(rnd()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 
-/* ---------- 地形定義 ---------- */
+/* ---------- 地形 ---------- */
 const T = {
-  sea:    {n:'海',      i:'',   land:false},
-  shoal:  {n:'浅瀬',    i:'',   land:false},
-  waste:  {n:'荒地',    i:'',   land:true},
-  plain:  {n:'平地',    i:'',   land:true},
-  forest: {n:'森',      i:'🌲', land:true},
-  farm:   {n:'農場',    i:'🌾', land:true},
-  factory:{n:'工場',    i:'🏭', land:true},
-  town:   {n:'町',      i:'🏘️', land:true},
-  city:   {n:'都市',    i:'🏙️', land:true},
-  mount:  {n:'山',      i:'⛰️', land:true},
-  levee:  {n:'防波堤',  i:'🧱', land:true},
-  crater: {n:'クレーター',i:'🕳️', land:true},
+  sea:    {n:'海',   i:'',    land:false},
+  shoal:  {n:'浅瀬', i:'',    land:false},
+  waste:  {n:'荒地', i:'',    land:true},
+  plain:  {n:'平地', i:'',    land:true},
+  town:   {n:'町',   i:'🏘️',  land:true},
+  forest: {n:'森',   i:'🌲',  land:true},
+  farm:   {n:'農場', i:'🌾',  land:true},
+  factory:{n:'工場', i:'🏭',  land:true},
+  mountain:{n:'山',  i:'⛰️',  land:true},
 };
-const MAXLV = 5;
+const SEAISH = ['sea','shoal'];
+function tileName(t){
+  if(t.t==='town') return t.lv<30?'村':(t.lv<100?'町':'都市');
+  if(t.t==='mountain') return t.lv>0?'採掘場':'山';
+  return T[t.t].n;
+}
+function tileIcon(t){
+  if(t.t==='town') return t.lv<30?'🏠':(t.lv<100?'🏘️':'🏙️');
+  if(t.t==='mountain') return t.lv>0?'⛏️':'⛰️';
+  return T[t.t].i;
+}
 
-/* ---------- コマンド定義 ---------- */
-const CMD = [
-  { id:'seichi', n:'整地', cost:20, ap:1, desc:'荒地・森・施設を平地に戻す',
-    cf:(is,t)=> t && t.t==='mount' ? 260 : 20,
-    apf:(is,t)=> t && t.t==='mount' ? 2 : 1,
-    ok:(t)=> ['waste','forest','farm','factory','town','city','levee','crater','mount'].includes(t.t),
-    run:(g,is,x,y,t)=>{ const was=T[t.t].n; t.t='plain'; t.lv=0; t.pop=0; return `${x+1},${y+1} を整地しました（${was}→平地）`; } },
-
-  { id:'umetate', n:'埋め立て', cost:120, ap:2, desc:'海を陸地にする（陸に隣接）',
-    cf:(is)=> 150 + Math.max(0, is.land-25)*22,
-    ok:(t,g,is,x,y)=> (t.t==='sea'||t.t==='shoal') && adjLand(is,x,y)>0,
-    run:(g,is,x,y,t)=>{ t.t='waste'; t.lv=0; return `${x+1},${y+1} の海を埋め立てて荒地にしました`; } },
-
-  { id:'kussaku', n:'掘削', cost:60, ap:1, desc:'陸地を海に戻す',
-    ok:(t)=> ['waste','plain','crater'].includes(t.t),
-    run:(g,is,x,y,t)=>{ t.t='sea'; t.lv=0; t.pop=0; return `${x+1},${y+1} を掘削して海に戻しました`; } },
-
-  { id:'farm', n:'農場', cost:60, ap:1, desc:'食料を生産。Lvを上げると増産',
-    ok:(t)=> t.t==='plain' || t.t==='waste' || (t.t==='farm'&&t.lv<MAXLV),
-    run:(g,is,x,y,t)=>{ if(t.t!=='farm'){t.t='farm';t.lv=1;} else t.lv++;
-      return `${x+1},${y+1} に農場を整備しました（Lv${t.lv}）`; } },
-
-  { id:'fact', n:'工場', cost:130, ap:1, desc:'資金を生産。周囲の農場に公害',
-    ok:(t)=> t.t==='plain' || (t.t==='factory'&&t.lv<MAXLV),
-    run:(g,is,x,y,t)=>{ if(t.t!=='factory'){t.t='factory';t.lv=1;} else t.lv++;
-      return `${x+1},${y+1} に工場を建設しました（Lv${t.lv}）`; } },
-
-  { id:'town', n:'町の開発', cost:100, ap:1, desc:'人口が増える。Lv4で都市に',
-    ok:(t)=> t.t==='plain' || ((t.t==='town'||t.t==='city')&&t.lv<MAXLV),
-    run:(g,is,x,y,t)=>{ if(t.t!=='town'&&t.t!=='city'){t.t='town';t.lv=1;t.pop=80;}
-      else { t.lv++; if(t.lv>=4) t.t='city'; }
-      return `${x+1},${y+1} の${T[t.t].n}を開発しました（Lv${t.lv}）`; } },
-
-  { id:'shinrin', n:'植林', cost:40, ap:1, desc:'観光収入＋台風被害を軽減',
-    ok:(t)=> t.t==='plain'||t.t==='waste',
-    run:(g,is,x,y,t)=>{ t.t='forest'; t.lv=1; return `${x+1},${y+1} に植林しました`; } },
-
-  { id:'bassai', n:'伐採', cost:0, ap:1, desc:'森を切り木材を売る（+120）',
-    ok:(t)=> t.t==='forest',
-    run:(g,is,x,y,t)=>{ t.t='plain'; t.lv=0; is.money += 120; return `${x+1},${y+1} の森を伐採、木材を売却しました（+120）`; } },
-
-  { id:'levee', n:'防波堤', cost:180, ap:1, desc:'沿岸に築き隣接マスを津波から守る',
-    ok:(t,g,is,x,y)=> (t.t==='plain'||t.t==='waste') && is && isCoast(is,x,y),
-    run:(g,is,x,y,t)=>{ t.t='levee'; t.lv=1; return `${x+1},${y+1} に防波堤を築きました`; } },
+/* ---------- ヘックス（odd-r：奇数行を右に半マスずらす） ---------- */
+const HEXDIR = [
+  [[ 1,0],[ 0,-1],[-1,-1],[-1,0],[-1, 1],[ 0, 1]], // 偶数行
+  [[ 1,0],[ 1,-1],[ 0,-1],[-1,0],[ 0, 1],[ 1, 1]], // 奇数行
 ];
+function neigh(is,x,y){
+  const r=[];
+  for(const [dx,dy] of HEXDIR[y&1]){
+    const nx=x+dx, ny=y+dy;
+    if(nx>=0&&ny>=0&&nx<is.w&&ny<is.h) r.push({x:nx,y:ny,t:is.map[ny][nx]});
+  }
+  return r;
+}
+function ring2(is,x,y){ // 距離2以内（自分を除く最大18マス）
+  const seen=new Set([x+','+y]), out=[];
+  for(const a of neigh(is,x,y)){ seen.add(a.x+','+a.y); out.push(a); }
+  for(const a of out.slice()){
+    for(const b of neigh(is,a.x,a.y)){ const k=b.x+','+b.y; if(!seen.has(k)){ seen.add(k); out.push(b); } }
+  }
+  return out;
+}
+function countAdj(is,x,y,pred){ let c=0; for(const a of neigh(is,x,y)) if(pred(a.t)) c++; return c; }
+// マップ外は外洋とみなす（端のマスは常に海に接している）
+function adjSea(is,x,y){
+  let c=6-neigh(is,x,y).length;
+  for(const a of neigh(is,x,y)) if(SEAISH.includes(a.t.t)) c++;
+  return c;
+}
+const adjForest = (is,x,y)=> countAdj(is,x,y,t=>t.t==='forest');
+const adjLand   = (is,x,y)=> countAdj(is,x,y,t=>T[t.t].land);
+const monsterAt = (is,x,y)=> !!(is.monster && is.monster.x===x && is.monster.y===y);
 
-function costOf(cmd, is, t){ return cmd.cf ? Math.round(cmd.cf(is,t)) : cmd.cost; }
-function apOf(cmd, is, t){ return cmd.apf ? cmd.apf(is,t) : cmd.ap; }
+function allCells(is){ const r=[]; for(let y=0;y<is.h;y++)for(let x=0;x<is.w;x++) r.push({x,y}); return r; }
+function landCells(is){ return allCells(is).filter(c=>T[is.map[c.y][c.x].t].land); }
+function countType(is,ty){ let c=0; for(const r of is.map) for(const t of r) if(t.t===ty) c++; return c; }
+
+/* ---------- コマンド（原作の費用体系を踏襲） ---------- */
+const MAXFARM=50, MAXFACT=100, MAXMINE=200, MAXTOWN=200, MAXFOREST=200;
+const CMD = [
+  { id:'seichi', n:'整地', cost:5, ap:1, desc:'平地に戻す（1%で埋蔵金）',
+    ok:(t)=> T[t.t].land && t.t!=='mountain' && t.t!=='plain',
+    run:(g,is,x,y,t)=>{ const was=tileName(t); t.t='plain'; t.lv=0;
+      let m=`(${x},${y}) を整地しました（${was}→平地）`;
+      if(rint(1000)<10){ const v=100+rint(901); is.money+=v; m+=`／埋蔵金を発見！ +${v}億円`; }
+      return m; } },
+
+  { id:'umetate', n:'埋め立て', cost:150, ap:1, desc:'海→浅瀬→荒地',
+    ok:(t,g,is,x,y)=> SEAISH.includes(t.t) && is && adjLand(is,x,y)>0,
+    run:(g,is,x,y,t)=>{
+      if(t.t==='sea'){ t.t='shoal'; t.lv=0; return `(${x},${y}) に土砂を入れ、浅瀬になりました`; }
+      t.t='waste'; t.lv=0;
+      // 湾が埋まりやすい：周囲の海が少ないと隣の海も浅瀬になる
+      if(adjSea(is,x,y)<=3) for(const a of neigh(is,x,y)) if(a.t.t==='sea') a.t.t='shoal';
+      return `(${x},${y}) の浅瀬を埋め立て、荒地になりました`; } },
+
+  { id:'kussaku', n:'掘削', cost:200, ap:1, desc:'陸→浅瀬→海／山→荒地',
+    ok:(t)=> t.t!=='sea',
+    run:(g,is,x,y,t)=>{
+      if(t.t==='mountain'){ t.t='waste'; t.lv=0; return `(${x},${y}) の山を切り崩し、荒地になりました`; }
+      if(t.t==='shoal'){ t.t='sea'; t.lv=0; return `(${x},${y}) の浅瀬を掘り下げ、海に戻しました`; }
+      const was=tileName(t); t.t='shoal'; t.lv=0; return `(${x},${y}) の${was}を掘削し、浅瀬になりました`; } },
+
+  { id:'bassai', n:'伐採', cost:0, ap:1, desc:'樹齢×5億円で売却',
+    ok:(t)=> t.t==='forest',
+    run:(g,is,x,y,t)=>{ const v=t.lv*5; is.money+=v; const age=t.lv; t.t='plain'; t.lv=0;
+      return `(${x},${y}) の森（樹齢${age}）を伐採、木材を ${v}億円 で売却しました`; } },
+
+  { id:'shinrin', n:'植林', cost:50, ap:1, desc:'防火帯・防風林になる',
+    ok:(t)=> ['plain','waste','town'].includes(t.t),
+    run:(g,is,x,y,t)=>{ t.t='forest'; t.lv=1; return `(${x},${y}) に植林しました`; } },
+
+  { id:'farm', n:'農場整備', cost:20, ap:1, desc:'食料生産。規模+2（最大50）',
+    ok:(t)=> ['plain','waste','town'].includes(t.t) || (t.t==='farm'&&t.lv<MAXFARM),
+    run:(g,is,x,y,t)=>{
+      if(t.t!=='farm'){ t.t='farm'; t.lv=10; } else t.lv=Math.min(MAXFARM,t.lv+2);
+      return `(${x},${y}) の農場を整備しました（規模${t.lv}）`; } },
+
+  { id:'fact', n:'工場建設', cost:100, ap:1, desc:'余った人手を資金に。規模+10',
+    ok:(t)=> ['plain','waste','town'].includes(t.t) || (t.t==='factory'&&t.lv<MAXFACT),
+    run:(g,is,x,y,t)=>{
+      if(t.t!=='factory'){ t.t='factory'; t.lv=30; } else t.lv=Math.min(MAXFACT,t.lv+10);
+      return `(${x},${y}) に工場を建設しました（規模${t.lv}）`; } },
+
+  { id:'mine', n:'採掘場整備', cost:300, ap:1, desc:'山を資金源に。規模+5',
+    ok:(t)=> t.t==='mountain' && t.lv<MAXMINE,
+    run:(g,is,x,y,t)=>{ t.lv=Math.min(MAXMINE,t.lv+5);
+      return `(${x},${y}) の採掘場を整備しました（規模${t.lv}）`; } },
+
+  { id:'yuchi', n:'誘致活動', cost:1000, ap:1, target:'island', desc:'このターン人口が大きく伸びる',
+    ok:()=> true,
+    run:(g,is,x,y,t)=>{ is.propaganda=1; return `誘致活動を実施。移住者が押し寄せています`; } },
+
+  { id:'export', n:'食料輸出', cost:0, food:100, ap:1, target:'island', desc:'食料100 → 資金10',
+    ok:(t,g,is)=> is && is.food>=100,
+    run:(g,is,x,y,t)=>{ is.food-=100; is.money+=10; return `食料100を輸出し、10億円を得ました`; } },
+];
 
 /* ---------- 設定 ---------- */
 const SIZES = {
-  s:{n:'小',w:9, h:9, cpu:3, note:'9×9・さくっと'},
-  m:{n:'中',w:11,h:11,cpu:5, note:'11×11・標準'},
-  l:{n:'大',w:13,h:13,cpu:7, note:'13×13・じっくり'},
+  s:{n:'小',w:10,h:10,note:'10×10・さくっと'},
+  m:{n:'中',w:12,h:12,note:'12×12・原作と同じ'},
+  l:{n:'大',w:14,h:14,note:'14×14・じっくり'},
 };
 const GOALS = {
-  score:{n:'スコア目標',  note:'先に目標スコアへ到達した島が勝ち'},
-  turn: {n:'規定ターン',  note:'規定ターン終了時のスコア上位が勝ち'},
-  endl: {n:'エンドレス',  note:'勝敗なし。好きなだけ島を育てます'},
-  conq: {n:'制霸',        note:'軍事ユニット実装後（Ver.2）に解禁予定', locked:true},
+  pop:  {n:'人口目標', note:'先に目標人口へ到達した島が勝ち'},
+  turn: {n:'規定ターン',note:'規定ターン終了時の人口1位が勝ち'},
+  endl: {n:'エンドレス',note:'勝敗なし。好きなだけ島を育てます'},
+  conq: {n:'制覇',      note:'軍事ユニット実装後（Ver.2）に解禁予定', locked:true},
 };
 const DIFFS = {
   easy:{n:'のどか', m:0.55, note:'災害ひかえめ'},
   norm:{n:'ふつう', m:1.0,  note:'標準'},
-  hard:{n:'荒天',   m:1.7,  note:'災害だらけ'},
+  hard:{n:'荒天',   m:1.8,  note:'災害だらけ'},
 };
-const CPUNAMES = ['ラムネ島','こんぺい島','わらび島','みたらし島','あんこ島','きなこ島','ずんだ島','よもぎ島','くずもち島'];
+const AI = {
+  weak:{ n:'のんびり', tag:'弱', col:'#7fa8c9', ap:3, mistake:0.34, prepare:false, jsdf:0.25, econ:0.8,  start:0.85 },
+  even:{ n:'互角',     tag:'並', col:'#e6edf6', ap:5, mistake:0.12, prepare:true,  jsdf:0.6,  econ:1.0,  start:1.0  },
+  hard:{ n:'手強い',   tag:'強', col:'#f0b429', ap:7, mistake:0.0,  prepare:true,  jsdf:0.95, econ:1.25, start:1.25 },
+};
+const AI_ORDER=['weak','even','hard'];
+const AI_OPT={ auto:{n:'難易度連動'}, weak:AI.weak, even:AI.even, hard:AI.hard };
+const DIFF2AI={ easy:'weak', norm:'even', hard:'hard' };
+const aiOf = is => AI[is.level] || AI.even;
+const CPUNAMES=['ラムネ島','こんぺい島','わらび島','みたらし島','あんこ島','きなこ島','ずんだ島','よもぎ島','くずもち島'];
 
-/* ---------- ゲーム状態 ---------- */
-let G = null;
-let sel = null;        // 選択中のマス {x,y}
-let speed = 0;         // 0=停止
-let timer = null;
-let viewIsl = 1;       // 他島ビュー
-let evQueue = [];
+/* 上限（原作準拠） */
+const CAP_MONEY=9999, CAP_FOOD=9999;
+
+/* ---------- 状態 ---------- */
+let G=null, sel=null, speed=0, timer=null, viewIsl=1, flashes=[];
 
 /* =========================================================
-   マップ生成
+   島の生成
    ========================================================= */
-function makeIsland(id, name, isPlayer, w, h){
-  const m = [];
-  for(let y=0;y<h;y++){ const row=[]; for(let x=0;x<w;x++) row.push({t:'sea',lv:0,pop:0}); m.push(row); }
-  const cx=(w-1)/2, cy=(h-1)/2, R=Math.min(w,h)/2;
-  // ぐにゃっとした島の輪郭
-  const ph=[rnd()*6.28, rnd()*6.28, rnd()*6.28];
+function hexPos(x,y){ return { px:x+(y&1)*0.5, py:y*0.866 }; }
+function makeIsland(id,name,isPlayer,w,h,level){
+  const m=[];
+  for(let y=0;y<h;y++){ const r=[]; for(let x=0;x<w;x++) r.push({t:'sea',lv:0}); m.push(r); }
+  const c=hexPos((w-1)/2,(h-1)/2), R=Math.min(w,h*0.866)/2;
+  const ph=[rnd()*6.28,rnd()*6.28,rnd()*6.28];
   for(let y=0;y<h;y++) for(let x=0;x<w;x++){
-    const dx=x-cx, dy=y-cy;
-    const d=Math.sqrt(dx*dx+dy*dy)/R;
-    const a=Math.atan2(dy,dx);
-    const wob = 0.13*Math.sin(a*3+ph[0]) + 0.09*Math.sin(a*5+ph[1]) + 0.06*Math.sin(a*2+ph[2]);
-    const th = 0.58 + wob;
-    if(d < th){
-      const r=rnd();
-      m[y][x].t = r<0.12 ? 'mount' : (r<0.34 ? 'forest' : (r<0.62 ? 'plain' : 'waste'));
-    } else if(d < th+0.14){
-      m[y][x].t = 'shoal';
-    }
+    const p=hexPos(x,y), dx=p.px-c.px, dy=p.py-c.py;
+    const d=Math.sqrt(dx*dx+dy*dy)/R, a=Math.atan2(dy,dx);
+    const wob=0.13*Math.sin(a*3+ph[0])+0.09*Math.sin(a*5+ph[1])+0.06*Math.sin(a*2+ph[2]);
+    const th=0.72+wob;
+    if(d<th){ const r=rnd(); m[y][x].t = r<0.10?'mountain' : (r<0.34?'forest':(r<0.64?'plain':'waste'));
+      if(m[y][x].t==='forest') m[y][x].lv=ri(20,60); }
+    else if(d<th+0.13) m[y][x].t='shoal';
   }
-  const isl = {
-    id, name, isPlayer, w, h, map:m, alive:true,
-    money:1800, food:1200, pop:0, ap:5, score:0,
-    monster:null, hist:[], dead:0,
-    policy: pick(['balanced','industry','agri','expand','balanced']),
-    lastIncome:0, lastFood:0,
-  };
+  const L=isPlayer?null:(AI[level]||AI.even), sm=L?L.start:1;
+  const isl={ id,name,isPlayer,w,h,map:m,alive:true, level:isPlayer?null:(level||'even'),
+    money:Math.round(700*sm), food:Math.round(400*sm), pop:0, area:0, farm:0, factory:0, mine:0,
+    ap:L?L.ap:5, monster:null, propaganda:0, policy:pick(['balanced','industry','agri','expand','balanced']),
+    lastFood:0, lastMoney:0 };
   // 初期施設
-  const spots = landCells(isl).filter(c=>['plain','waste'].includes(isl.map[c.y][c.x].t));
-  shuffle(spots);
-  for(let k=0;k<2 && spots.length;k++){ const c=spots.pop(); isl.map[c.y][c.x]={t:'town',lv:1,pop:120}; }
-  for(let k=0;k<2 && spots.length;k++){ const c=spots.pop(); isl.map[c.y][c.x]={t:'farm',lv:1,pop:0}; }
-  if(spots.length){ const c=spots.pop(); isl.map[c.y][c.x]={t:'factory',lv:1,pop:0}; }
-  recalc(isl);
+  const spots=landCells(isl).filter(c=>['plain','waste'].includes(isl.map[c.y][c.x].t)); shuffle(spots);
+  const bonus = sm>1.1?1:(sm<0.9?-1:0);
+  for(let k=0;k<3+bonus&&spots.length;k++){ const c=spots.pop(); isl.map[c.y][c.x]={t:'town',lv:ri(8,16)}; }
+  for(let k=0;k<2+Math.max(0,bonus)&&spots.length;k++){ const c=spots.pop(); isl.map[c.y][c.x]={t:'farm',lv:10}; }
+  if(bonus>=0&&spots.length){ const c=spots.pop(); isl.map[c.y][c.x]={t:'factory',lv:30}; }
+  estimate(isl);
   return isl;
 }
-function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(rnd()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } }
-function landCells(is){ const r=[]; for(let y=0;y<is.h;y++)for(let x=0;x<is.w;x++) if(T[is.map[y][x].t].land) r.push({x,y}); return r; }
-function allCells(is){ const r=[]; for(let y=0;y<is.h;y++)for(let x=0;x<is.w;x++) r.push({x,y}); return r; }
-function neigh(is,x,y){ const r=[]; for(const[dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){ const nx=x+dx, ny=y+dy;
-  if(nx>=0&&ny>=0&&nx<is.w&&ny<is.h) r.push({x:nx,y:ny,t:is.map[ny][nx]}); } return r; }
-function neigh8(is,x,y){ const r=[]; for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){ if(!dx&&!dy)continue;
-  const nx=x+dx,ny=y+dy; if(nx>=0&&ny>=0&&nx<is.w&&ny<is.h) r.push({x:nx,y:ny,t:is.map[ny][nx]}); } return r; }
-function adjLand(is,x,y){ return neigh(is,x,y).filter(c=>T[c.t.t].land).length; }
-function isCoast(is,x,y){ return neigh(is,x,y).some(c=>c.t.t==='sea'||c.t.t==='shoal'); }
-function count(is,type){ let c=0; for(const r of is.map) for(const t of r) if(t.t===type) c++; return c; }
-function sumLv(is,...types){ let s=0; for(const r of is.map) for(const t of r) if(types.includes(t.t)) s+=t.lv; return s; }
 
 /* =========================================================
-   経済計算
+   集計と経済（原作の労働力モデル）
    ========================================================= */
-function recalc(is){
-  let pop=0;
-  for(const r of is.map) for(const t of r) if(t.t==='town'||t.t==='city') pop += t.pop;
-  is.pop = Math.round(pop);
-  is.land = landCells(is).length;
-  is.score = Math.floor(
-    is.pop/55 + Math.min(is.money,60000)/500 +
-    sumLv(is,'farm')*5 + sumLv(is,'factory')*7 + sumLv(is,'town','city')*9 +
-    count(is,'forest')*3 + is.land*2
-  );
-  return is;
-}
-function foodCap(is){ return 2500 + sumLv(is,'town','city')*260 + count(is,'farm')*220; }
-function foodProduction(is){
-  let f=0;
+function estimate(is){
+  let pop=0,area=0,farm=0,factory=0,mine=0;
   for(let y=0;y<is.h;y++) for(let x=0;x<is.w;x++){
     const t=is.map[y][x];
-    if(t.t!=='farm') continue;
-    let base = t.lv*58;
-    const pollute = neigh8(is,x,y).filter(c=>c.t.t==='factory').length;
-    base *= Math.max(0.4, 1 - pollute*0.09);
-    if(neigh(is,x,y).some(c=>c.t.t==='sea'||c.t.t==='shoal')) base *= 1.08; // 沿岸ボーナス
-    f += base;
+    if(SEAISH.includes(t.t)) continue;
+    area++;
+    if(t.t==='town') pop+=t.lv;
+    else if(t.t==='farm') farm+=t.lv;
+    else if(t.t==='factory') factory+=t.lv;
+    else if(t.t==='mountain') mine+=t.lv;
   }
-  return Math.round(f);
+  is.pop=pop; is.area=area; is.farm=farm; is.factory=factory; is.mine=mine;
+  return is;
 }
-function moneyIncome(is){
-  let m = sumLv(is,'factory')*46 + is.pop*0.062 + count(is,'forest')*9;
-  m -= count(is,'levee')*4 + sumLv(is,'town','city')*3;
-  return Math.round(m);
+// 労働力の内訳（表示にも使う）
+function laborInfo(is){
+  const need=is.farm*10, cap=is.factory+is.mine;
+  const spare=Math.max(0,is.pop-need);
+  const foodGain=is.pop>need?need:is.pop;
+  const moneyGain=is.pop>need?Math.min(Math.floor(spare/10),cap):0;
+  return { need, cap, spare, foodGain, moneyGain, eat:Math.floor(is.pop*0.2), idle:Math.max(0,Math.floor(spare/10)-cap) };
 }
-function foodNeed(is){ return Math.round(is.pop*0.06 + 20); }
+function popPeople(v){ return v*100; } // 表示用（1単位=100人）
 
 /* =========================================================
    ターン処理
    ========================================================= */
-function stepIsland(is, g, logs){
+function stepIsland(is,g,logs){
   if(!is.alive) return;
-  // --- 生産・消費 ---
-  const prod = foodProduction(is), need = foodNeed(is), inc = moneyIncome(is);
-  is.lastFood = prod - need; is.lastIncome = inc;
-  is.food += prod - need;
-  is.money += inc;
-  if(is.money < 0){ is.money = 0; }
-  // 備蓄限界を超えた食料は輸出して資金に
-  const cap = foodCap(is);
-  if(is.food > cap){
-    const ex = is.food - cap;
-    is.food = cap;
-    is.money += Math.round(ex*0.2);
-    is.exported = Math.round(ex);
-  } else is.exported = 0;
+  const L=is.isPlayer?null:aiOf(is), em=L?L.econ:1;
+  const li=laborInfo(is);
+  const fg=Math.round(li.foodGain*em), mg=Math.round(li.moneyGain*em);
+  is.food += fg - li.eat;
+  is.money += mg;
+  is.lastFood = fg-li.eat; is.lastMoney = mg;
 
-  // --- 人口変動 ---
-  let starve = false;
-  if(is.food < 0){ is.food = 0; starve = true; }
-  for(let y=0;y<is.h;y++) for(let x=0;x<is.w;x++){
-    const t=is.map[y][x];
-    if(t.t!=='town'&&t.t!=='city') continue;
-    const cap = t.lv*(t.t==='city'?520:380);
-    if(starve){ t.pop = Math.max(0, t.pop*0.88); }
-    else {
-      const room = cap - t.pop;
-      if(room>0) t.pop = Math.min(cap, t.pop + Math.max(12, room*0.11));
-      else t.pop = cap;
+  // 食料あふれは換金、上限で頭打ち
+  if(is.food>CAP_FOOD){ is.money += Math.floor((is.food-CAP_FOOD)/10); is.food=CAP_FOOD; }
+  if(is.money>CAP_MONEY) is.money=CAP_MONEY;
+  if(is.money<0) is.money=0;
+
+  const starve = is.food<=0;
+  if(starve){ is.food=0; logs.push({is,k:'bad',s:'食料が尽きた！ 人口が流出し、施設が荒廃しています'}); }
+
+  // --- マスごとの処理 ---
+  const addpop = starve ? -30 : (is.propaganda? 30 : 10);
+  const addpop2 = is.propaganda ? 3 : 0;
+  for(const c of shuffle(allCells(is))){
+    const t=is.map[c.y][c.x];
+    if(t.t==='town'){
+      if(addpop<0){ t.lv -= rint(30)+1; if(t.lv<=0){ t.t='plain'; t.lv=0; continue; } }
+      else if(t.lv<100){ t.lv=Math.min(100,t.lv+rint(addpop)+1); }
+      else if(addpop2>0){ t.lv=Math.min(MAXTOWN,t.lv+rint(addpop2)+1); }
+    } else if(t.t==='plain'){
+      // 隣に育った町か農場があれば自然に村が生まれる（怪獣の足元は除く）
+      if(rint(5)===0 && !monsterAt(is,c.x,c.y) && neigh(is,c.x,c.y).some(a=>(a.t.t==='town'||a.t.t==='farm')&&a.t.lv>1)){
+        t.t='town'; t.lv=1;
+      }
+    } else if(t.t==='forest'){
+      if(t.lv<MAXFOREST) t.lv++;
+    }
+    // 火災：町(規模30超)と工場は、隣に森が無いと燃える
+    if((t.t==='town'&&t.lv>30) || t.t==='factory'){
+      if(rint(1000) < 10*DIFFS[g.diff].m && adjForest(is,c.x,c.y)===0){
+        logs.push({is,k:'bad',s:`(${c.x},${c.y}) の${tileName(t)}が火災で全焼！ 周囲に森がありませんでした`,icon:'🔥',title:'火災'});
+        t.t='waste'; t.lv=0; flash(is,c);
+      }
     }
   }
-  if(starve) logs.push({is, k:'bad', s:`食料が尽き、飢饉が発生。人口が減少しています…`});
+  if(starve){ // 飢饉：農場・工場が1/4で壊滅
+    for(const c of landCells(is)){ const t=is.map[c.y][c.x];
+      if((t.t==='farm'||t.t==='factory') && rint(4)===0){
+        logs.push({is,k:'bad',s:`(${c.x},${c.y}) の${tileName(t)}が飢饉で放棄されました`}); t.t='waste'; t.lv=0; flash(is,c); } }
+  }
+  is.propaganda=0;
 
-  // --- 災害 ---
-  disaster(is, g, logs);
-  // --- 怪獣の継続被害 ---
-  if(is.monster) monsterAct(is, g, logs);
+  disasters(is,g,logs);
+  if(is.monster) monsterAct(is,g,logs);
 
-  is.ap = 5;
-  recalc(is);
-  is.hist.push(is.score); if(is.hist.length>60) is.hist.shift();
-  if(is.pop<=0 && is.land<=2){ is.alive=false; logs.push({is,k:'bad',s:`${is.name} は壊滅しました…`}); }
+  is.ap = is.isPlayer?5:aiOf(is).ap;
+  estimate(is);
+  if(is.pop<=0 && is.area<=3){ is.alive=false; logs.push({is,k:'bad',s:`${is.name} は無人島となりました…`}); }
 }
 
-/* ---------- 災害テーブル ---------- */
-const EVENTS = [
-  {id:'typhoon', w:24, icon:'🌀', n:'台風', bad:true},
-  {id:'quake',   w:20, icon:'🌐', n:'地震', bad:true},
-  {id:'tsunami', w:12, icon:'🌊', n:'津波', bad:true, major:true},
-  {id:'volcano', w:8,  icon:'🌋', n:'噴火', bad:true, major:true},
-  {id:'monster', w:8,  icon:'👾', n:'怪獣襲来', bad:true, major:true},
-  {id:'plague',  w:9,  icon:'🦠', n:'疫病', bad:true},
-  {id:'meteor',  w:4,  icon:'☄️', n:'隕石落下', bad:true, major:true},
-  {id:'harvest', w:6,  icon:'🌾', n:'豊作', bad:false},
-  {id:'boom',    w:6,  icon:'💰', n:'好景気', bad:false},
-  {id:'migrate', w:4,  icon:'🚢', n:'移民', bad:false},
-];
-function rollEvent(){
-  const tot = EVENTS.reduce((a,e)=>a+e.w,0);
-  let r = rnd()*tot;
-  for(const e of EVENTS){ r-=e.w; if(r<=0) return e; }
-  return EVENTS[0];
-}
-function disaster(is, g, logs){
-  const base = 0.19 * DIFFS[g.diff].m;
-  if(rnd() > base) return;
-  const e = rollEvent();
-  if(e.id==='monster' && is.monster) return; // 重複回避
-  const msg = applyEvent(is, g, e);
-  if(msg) logs.push({is, k:e.bad?'bad':'good', s:msg, icon:e.icon, title:e.n, major:!!e.major});
-}
-function applyEvent(is, g, e){
-  const M = DIFFS[g.diff].m;
-  switch(e.id){
-    case 'typhoon': {
-      const forestRate = count(is,'forest') / Math.max(1,is.land);
-      const power = Math.max(1, Math.round((2 + ri(0,3)) * M * (1-forestRate*0.55)));
-      const cells = landCells(is); shuffle(cells);
-      let hit=0;
-      for(const c of cells.slice(0,power)){
-        const t=is.map[c.y][c.x];
-        if(['farm','town','city','factory'].includes(t.t)){ t.lv=Math.max(1,t.lv-1); if(t.pop) t.pop*=0.85; hit++; flash(is,c); }
-        else if(t.t==='forest'){ t.t='plain'; t.lv=0; hit++; flash(is,c); }
-      }
-      is.food = Math.max(0, Math.round(is.food*0.9));
-      if(!hit) return `台風が接近しましたが、大きな被害はありませんでした`;
-      return `台風が上陸。${hit}か所が被害を受けました${forestRate>0.2?'（森が被害を和らげました）':''}`;
+/* ---------- 災害（原作の確率と地形依存判定） ---------- */
+function disasters(is,g,logs){
+  const M=DIFFS[g.diff].m, R=n=>rint(1000)<n*M;
+  const fallBorder = Math.round(is.w*is.h*0.62);
+
+  // 地震：都市と工場が1/4で全壊
+  if(R(5)){
+    let hit=0;
+    for(const c of landCells(is)){ const t=is.map[c.y][c.x];
+      if(((t.t==='town'&&t.lv>=100)||t.t==='factory') && rint(4)===0){ t.t='waste'; t.lv=0; hit++; flash(is,c); } }
+    logs.push({is,k:'bad',icon:'🌐',title:'地震',major:hit>0,
+      s: hit?`地震が発生。都市と工場 ${hit}か所が倒壊しました`:'地震が発生しましたが、被害はありませんでした'});
+  }
+  // 津波：隣接する海の数−1 で判定
+  if(R(15)){
+    let hit=0;
+    for(const c of landCells(is)){ const t=is.map[c.y][c.x];
+      if(!['town','farm','factory'].includes(t.t)) continue;
+      if(rint(12) < adjSea(is,c.x,c.y)-1){ t.t='waste'; t.lv=0; hit++; flash(is,c); } }
+    logs.push({is,k:'bad',icon:'🌊',title:'津波',major:hit>0,
+      s: hit?`津波が襲来。海に張り出した ${hit}か所が飲まれました`:'津波が襲来しましたが、内陸の施設は無事でした'});
+  }
+  // 台風：農場が被害。隣接する森が守る
+  if(R(20)){
+    let hit=0,saved=0;
+    for(const c of landCells(is)){ const t=is.map[c.y][c.x];
+      if(t.t!=='farm') continue;
+      const f=adjForest(is,c.x,c.y);
+      if(rint(12) < 6-f){ t.t='plain'; t.lv=0; hit++; flash(is,c); } else if(f>0) saved++; }
+    logs.push({is,k:'bad',icon:'🌀',title:'台風',major:hit>0,
+      s: hit?`台風が上陸。農場 ${hit}か所が流されました${saved?`（防風林が${saved}か所を守りました）`:''}`
+            :'台風が上陸しましたが、農地は持ちこたえました'});
+  }
+  // 噴火：1マスが山になり、周囲6マスが荒地に
+  if(R(10)){
+    const c=pick(allCells(is));
+    is.map[c.y][c.x]={t:'mountain',lv:0}; flash(is,c);
+    let hit=0;
+    for(const a of neigh(is,c.x,c.y)){
+      if(SEAISH.includes(a.t.t)) continue;
+      if(a.t.t==='mountain') continue;
+      a.t.t='waste'; a.t.lv=0; hit++; flash(is,a);
     }
-    case 'quake': {
-      const power = Math.max(1, Math.round((2 + ri(0,4)) * M));
-      const cells = landCells(is); shuffle(cells);
-      let hit=0, dead=0;
-      for(const c of cells.slice(0,power)){
-        const t=is.map[c.y][c.x];
-        if(t.lv>0){ t.lv--; hit++;
-          if(t.pop){ dead += t.pop*0.12; t.pop*=0.88; }
-          if(t.lv<=0){ t.t = (t.t==='mount')?'mount':'waste'; t.lv=0; t.pop=0; }
-          else if(t.t==='city'&&t.lv<4) t.t='town';
-          flash(is,c);
-        }
-      }
-      if(!hit) return `地震が発生しましたが、被害はありませんでした`;
-      return `地震が発生。${hit}か所が損壊` + (dead>=1?`、約${fmt(dead)}人が犠牲になりました`:'しました');
-    }
-    case 'tsunami': {
-      const cells = landCells(is).filter(c=>isCoast(is,c.x,c.y)); shuffle(cells);
-      const power = Math.max(1, Math.round((2 + ri(0,3)) * M));
-      let hit=0, saved=0;
-      for(const c of cells.slice(0,power)){
-        const t=is.map[c.y][c.x];
-        if(t.t==='levee'){ saved++; continue; }
-        if(neigh(is,c.x,c.y).some(nc=>nc.t.t==='levee')){ saved++; continue; }
-        t.t='shoal'; t.lv=0; t.pop=0; hit++; flash(is,c);
-      }
-      if(!hit && !saved) return null;
-      return `津波が沿岸を襲い、${hit}マスが水没しました${saved?`（防波堤が${saved}マスを守りました）`:''}`;
-    }
-    case 'volcano': {
-      const mts = landCells(is).filter(c=>is.map[c.y][c.x].t==='mount');
-      const c = mts.length? pick(mts) : pick(landCells(is));
-      if(!c) return null;
-      is.map[c.y][c.x].t='mount'; is.map[c.y][c.x].lv=0;
-      let hit=0;
-      for(const nc of neigh8(is,c.x,c.y)){
-        if(!T[nc.t.t].land) continue;
-        if(rnd()<0.7*Math.min(1.4,M)){ nc.t.t='waste'; nc.t.lv=0; nc.t.pop=0; hit++; flash(is,nc); }
-      }
-      return `火山が噴火。溶岩が周囲${hit}マスを焼き払いました`;
-    }
-    case 'meteor': {
-      const c = pick(landCells(is)); if(!c) return null;
-      is.map[c.y][c.x]={t:'crater',lv:0,pop:0}; flash(is,c);
-      for(const nc of neigh(is,c.x,c.y)){ if(T[nc.t.t].land && rnd()<0.5){ nc.t.t='waste'; nc.t.lv=0; nc.t.pop=0; } }
-      return `隕石が落下、${c.x+1},${c.y+1} にクレーターができました`;
-    }
-    case 'plague': {
-      const before=is.pop;
-      for(const r of is.map) for(const t of r) if(t.pop) t.pop*=0.86;
-      recalc(is);
-      return `疫病が流行。人口が ${before.toLocaleString()} → ${is.pop.toLocaleString()} に減少しました`;
-    }
-    case 'monster': {
-      const coast = landCells(is).filter(c=>isCoast(is,c.x,c.y));
-      const c = coast.length? pick(coast) : pick(landCells(is));
-      if(!c) return null;
-      is.monster = {x:c.x, y:c.y, hp:3+Math.round(M), life:5+ri(0,3), name:pick(['ゴジ゛ラもどき','大ダコ','溶岩ワーム','鋼鉄トカゲ','空飛ぶクジラ'])};
-      return `怪獣「${is.monster.name}」が ${c.x+1},${c.y+1} に上陸しました！`;
-    }
-    case 'harvest': { const g2=Math.round(foodProduction(is)*0.8+200); is.food+=g2; return `豊作！ 食料が ${g2} 増えました`; }
-    case 'boom':    { const g2=Math.round(moneyIncome(is)*1.4+300); is.money+=g2; return `好景気！ 資金が ${g2} 増えました`; }
-    case 'migrate': {
-      const towns=[]; for(let y=0;y<is.h;y++)for(let x=0;x<is.w;x++){const t=is.map[y][x]; if(t.t==='town'||t.t==='city') towns.push(t);}
-      if(!towns.length) return null;
-      let add=0; for(const t of towns){ const a=ri(40,140); t.pop+=a; add+=a; }
-      return `移民船が到着。${add}人が島に住み始めました`;
+    logs.push({is,k:'bad',icon:'🌋',title:'噴火',major:true,
+      s:`(${c.x},${c.y}) で火山が噴火。溶岩が周囲 ${hit}マスを焼きました`});
+  }
+  // 隕石：着弾点が海に、周囲が荒地に
+  if(R(15)) meteor(is,logs,false);
+  // 巨大隕石：距離2まで壊滅
+  if(R(5)) meteor(is,logs,true);
+
+  // 地盤沈下：面積過多への罰
+  if(is.area>fallBorder && R(30)){
+    const doomed=[];
+    for(const c of landCells(is)){ const t=is.map[c.y][c.x];
+      if(t.t==='mountain') continue;
+      if(adjSea(is,c.x,c.y)>0) doomed.push(c); }
+    for(const c of doomed){ is.map[c.y][c.x]={t:'shoal',lv:0}; flash(is,c); }
+    logs.push({is,k:'bad',icon:'🕳️',title:'地盤沈下',major:true,
+      s:`地盤沈下が発生！ 海に接する ${doomed.length}マスが浅瀬に沈みました（面積上限 ${fallBorder}）`});
+  }
+  // 怪獣：人口10万人（=1000単位）以上で、面積に比例して出現
+  if(!is.monster && is.pop>=1000 && rint(10000) < 3*is.area*M){
+    const towns=landCells(is).filter(c=>is.map[c.y][c.x].t==='town');
+    if(towns.length){
+      const c=pick(towns);
+      is.monster={x:c.x,y:c.y,life:5+rint(4),name:pick(['オオダコ','ヨウガンワーム','ハガネトカゲ','ソラクジラ','ツノガメ','ヌシ'])};
+      is.map[c.y][c.x]={t:'waste',lv:0}; flash(is,c);
+      logs.push({is,k:'bad',icon:'👾',title:'怪獣襲来',major:true,
+        s:`怪獣「${is.monster.name}」が (${c.x},${c.y}) の町を踏みつぶして上陸しました！`});
     }
   }
-  return null;
 }
-function monsterAct(is, g, logs){
-  const mo = is.monster; if(!mo) return;
-  mo.life--;
-  if(mo.life<=0){ logs.push({is,k:'info',s:`怪獣「${mo.name}」は海へ帰っていきました`}); is.monster=null; return; }
-  // 移動
-  const opts = neigh(is,mo.x,mo.y).filter(c=>T[c.t.t].land);
-  if(opts.length){ const nc=pick(opts); mo.x=nc.x; mo.y=nc.y; }
-  const t = is.map[mo.y][mo.x];
-  if(T[t.t].land && t.t!=='waste'){
-    const was=T[t.t].n; t.t='waste'; t.lv=0; t.pop=0; flash(is,{x:mo.x,y:mo.y});
-    logs.push({is,k:'bad',s:`怪獣「${mo.name}」が ${mo.x+1},${mo.y+1} の${was}を破壊！（残り約${mo.life}ターン）`});
+function meteor(is,logs,huge){
+  const c=pick(allCells(is));
+  const cells = huge ? ring2(is,c.x,c.y) : neigh(is,c.x,c.y);
+  is.map[c.y][c.x]={t: SEAISH.includes(is.map[c.y][c.x].t)?'sea':'shoal', lv:0}; flash(is,c);
+  let hit=0;
+  for(const a of cells){
+    if(SEAISH.includes(a.t.t)) continue;
+    const near = neigh(is,c.x,c.y).some(n=>n.x===a.x&&n.y===a.y);
+    if(huge&&near){ a.t.t='shoal'; a.t.lv=0; } else { a.t.t='waste'; a.t.lv=0; }
+    hit++; flash(is,a);
+  }
+  // 怪獣の足元が海になったら、怪獣は海へ帰る
+  if(is.monster && SEAISH.includes(is.map[is.monster.y][is.monster.x].t)) is.monster=null;
+  logs.push({is,k:'bad',icon:'☄️',title:huge?'巨大隕石':'隕石落下',major:huge,
+    s:`${huge?'巨大隕石':'隕石'}が (${c.x},${c.y}) に落下。周囲 ${hit}マスが壊滅しました`});
+}
+function monsterAct(is,g,logs){
+  const mo=is.monster; if(!mo) return;
+  if(--mo.life<=0){ logs.push({is,k:'info',s:`怪獣「${mo.name}」は海へ帰っていきました`}); is.monster=null; return; }
+  const opts=neigh(is,mo.x,mo.y).filter(a=>T[a.t.t].land&&a.t.t!=='mountain');
+  if(opts.length){
+    const a=pick(opts); const was=tileName(a.t);
+    mo.x=a.x; mo.y=a.y;
+    if(a.t.t!=='waste'){ a.t.t='waste'; a.t.lv=0; flash(is,a);
+      logs.push({is,k:'bad',s:`怪獣「${mo.name}」が (${a.x},${a.y}) の${was}を踏みつぶした！（残り約${mo.life}ターン）`}); }
   }
 }
 
@@ -661,59 +687,114 @@ function monsterAct(is, g, logs){
    CPU AI
    ========================================================= */
 const POLICY = {
-  balanced:{farm:3,fact:3,town:4,forest:1,ume:1,levee:1},
-  industry:{farm:2,fact:5,town:3,forest:0,ume:1,levee:1},
-  agri:    {farm:5,fact:2,town:3,forest:2,ume:1,levee:1},
-  expand:  {farm:3,fact:2,town:3,forest:1,ume:4,levee:1},
+  balanced:{plain:5,fact:2,ume:3,mine:1},
+  industry:{plain:4,fact:4,ume:2,mine:3},
+  agri:    {plain:6,fact:1,ume:3,mine:0},
+  expand:  {plain:3,fact:1,ume:7,mine:1},
 };
-function cpuTurn(is, g, logs){
+/* 農場の適正規模
+   ・食料が回るには 農場*10 >= 人口*0.2 → 農場 >= 人口/50
+   ・資金が入るには 人口 > 農場*10        → 農場 <  人口/10
+   その窓の下寄りを狙うのが最適解 */
+function farmTarget(is){ return Math.ceil(is.pop/42)+3; }
+function farmLimit(is){  return Math.max(6, Math.floor(is.pop*0.085)); }
+
+function cpuTurn(is,g,logs){
   if(!is.alive) return;
-  let acted = 0;
-  const w = POLICY[is.policy] || POLICY.balanced;
-  while(is.ap>0 && acted<5){
-    const prod=foodProduction(is), need=foodNeed(is);
+  const L=aiOf(is), w=POLICY[is.policy]||POLICY.balanced;
+  const bag=[]; for(const k in w) for(let i=0;i<w[k];i++) bag.push(k);
+  let acted=0;
+  while(is.ap>0 && acted<12){
+    const li=laborInfo(is);
+    const ft=farmTarget(is), fl=farmLimit(is);
     let want;
-    // 緊急判断
-    if(is.food < need*3 || prod < need) want='farm';
-    else if(is.money < 400) want='fact';
-    else {
-      const bag=[];
-      for(const k in w) for(let i=0;i<w[k];i++) bag.push(k);
-      want = pick(bag);
+    if(rnd()<L.mistake){
+      want=pick(['farm','fact','plain','forest','ume','mine']);       // 状況を見ない一手
+    } else if(is.lastFood<0 || is.food<li.eat*3){
+      want='farm';                                                    // 食料危機は最優先
+    } else if(is.farm<ft && is.farm<fl){
+      want='farm';                                                    // 農場が足りない
+    } else if(li.idle>0 && is.money>=cost('fact')+60){
+      want='fact';                                                    // 余った人手を受け止める工場が足りない
+    } else if(L.prepare && firebreakNeeded(is) && canPlant(is) && is.money>=cost('shinrin')+60){
+      want='forest';                                                  // 防火帯を張る
+    } else {
+      want=pick(bag);
     }
-    if(!cpuBuild(is, want)) {
-      // フォールバック
-      if(!cpuBuild(is,'farm') && !cpuBuild(is,'town') && !cpuBuild(is,'fact')) break;
+    if(!cpuAct(is,want)){
+      if(!cpuAct(is,'plain')&&!cpuAct(is,'ume')&&!cpuAct(is,'fact')&&!cpuAct(is,'forest')) break;
     }
     acted++;
   }
-  // 怪獣対応
-  if(is.monster && is.money>1200 && rnd()<0.6){
+  // 町が育ちきったら誘致活動で天井を破る（強いCPUほど確実に判断する）
+  if(is.ap>0 && is.money>=1000+200 && maturedTowns(is) && rnd()<(0.4+L.jsdf*0.5)){
+    is.money-=1000; is.ap--; is.propaganda=1;
+  }
+  if(is.monster && is.money>1000 && rnd()<L.jsdf){
     is.money-=900;
     if(rnd()<0.65){ logs.push({is,k:'info',s:`${is.name} は自衛隊を出動させ、怪獣を撃退しました`}); is.monster=null; }
   }
 }
-function cpuBuild(is, want){
-  const cells = landCells(is).concat(allCells(is).filter(c=>!T[is.map[c.y][c.x].t].land));
-  shuffle(cells);
-  const cmdOf = {farm:'farm', fact:'fact', town:'town', forest:'shinrin', ume:'umetate', levee:'levee'};
-  const cmd = CMD.find(c=>c.id===cmdOf[want]); if(!cmd) return false;
-  // レベルアップ優先（既存施設を伸ばす方が効率的）
-  const order = cells.slice().sort((a,b)=>{
-    const ta=is.map[a.y][a.x], tb=is.map[b.y][b.x];
-    const sa=(ta.t===({farm:'farm',fact:'factory',town:'town'})[want]||(want==='town'&&ta.t==='city'))?0:1;
-    const sb=(tb.t===({farm:'farm',fact:'factory',town:'town'})[want]||(want==='town'&&tb.t==='city'))?0:1;
-    return sa-sb;
-  });
-  for(const c of order){
+// 森は防火帯として要る分だけ。植えすぎると町の土地が無くなる
+function canPlant(is){ return countType(is,'forest') < is.area*0.18 + 2; }
+// 町の多くが上限(規模100)に達しているか
+function maturedTowns(is){
+  let n=0,m=0;
+  for(const r of is.map) for(const t of r) if(t.t==='town'){ n++; if(t.lv>=100) m++; }
+  return n>=6 && m >= n*0.6;
+}
+const cost = id => CMD.find(c=>c.id===id).cost;
+function firebreakNeeded(is){
+  for(const c of landCells(is)){ const t=is.map[c.y][c.x];
+    if(((t.t==='town'&&t.lv>30)||t.t==='factory') && adjForest(is,c.x,c.y)===0) return true; }
+  return false;
+}
+function cpuAct(is,want){
+  // 農場の作りすぎは自滅なので、上限を超えたら別の手に振り替える
+  if(want==='farm' && is.farm>=farmLimit(is) && is.lastFood>=0) want='plain';
+  const cmdId={farm:'farm',fact:'fact',plain:'seichi',forest:'shinrin',ume:'umetate',mine:'mine'}[want];
+  const cmd=CMD.find(c=>c.id===cmdId); if(!cmd) return false;
+  if(is.money < cmd.cost+60 || is.ap < cmd.ap) return false;
+
+  const target={farm:'farm',fact:'factory',mine:'mountain'}[want];
+  // 施設を1マスに集中させると災害一発で壊滅するので、一定数までは分散させる
+  const spreadWant = want==='farm' ? Math.max(3,Math.ceil(farmTarget(is)/20))
+                   : want==='fact' ? Math.max(2,Math.ceil((laborInfo(is).spare/10)/90))
+                   : 1;
+  const spread = target ? countType(is,target) < spreadWant : false;
+  const pri=(t,x,y)=>{
+    if(t.t==='town') return 99;                                  // 町は絶対に潰さない
+    if(want==='forest'){
+      if(t.t==='forest') return 99;
+      const nb=neigh(is,x,y).some(a=>((a.t.t==='town'&&a.t.lv>30)||a.t.t==='factory')&&adjForest(is,a.x,a.y)===0);
+      return nb?(t.t==='waste'?0:1):(t.t==='waste'?4:6);          // 防火が要る場所を最優先／荒地から使う
+    }
+    if(want==='plain'){                                          // 町の種になる平地を作る
+      if(t.t!=='waste') return 99;
+      return neigh(is,x,y).some(a=>(a.t.t==='town'||a.t.t==='farm')&&a.t.lv>1)?0:2;
+    }
+    if(want==='ume'){                                            // 湾から埋めて津波に強い形にする
+      if(t.t==='shoal') return adjLand(is,x,y)>=4?0:1;
+      return adjLand(is,x,y)>=3?2:3;
+    }
+    if(want==='mine') return t.t==='mountain'?0:99;
+    // 農場・工場：分散させたい間は新規、足りたら既存を伸ばす。土地は荒地から使い平地は町に残す
+    if(t.t===target) return spread?3:0;
+    if(t.t==='waste') return spread?0:1;
+    if(t.t==='plain') return 2;
+    return 99;
+  };
+  const cells=shuffle(allCells(is));
+  cells.sort((a,b)=>pri(is.map[a.y][a.x],a.x,a.y)-pri(is.map[b.y][b.x],b.x,b.y));
+  for(const c of cells){
     const t=is.map[c.y][c.x];
+    if(t.t==='town') continue;
+    if(monsterAt(is,c.x,c.y)) continue;                          // 怪獣の足元には手を出せない
+    if(pri(t,c.x,c.y)>=99) continue;
+    if(want==='forest'&&t.t==='forest') continue;
     if(!cmd.ok(t,null,is,c.x,c.y)) continue;
-    const cost=costOf(cmd,is,t), ap=apOf(cmd,is,t);
-    if(is.money < cost + 150) return false; // 予備を残す
-    if(is.ap < ap) return false;
-    is.money -= cost; is.ap -= ap;
-    cmd.run(null, is, c.x, c.y, t);
-    recalc(is);
+    is.money-=cmd.cost; is.ap-=cmd.ap;
+    cmd.run(null,is,c.x,c.y,t); estimate(is);
     return true;
   }
   return false;
@@ -723,72 +804,67 @@ function cpuBuild(is, want){
    ゲーム進行
    ========================================================= */
 function newGame(cfg){
-  srand((Date.now()^ (Math.random()*1e9))>>>0);
-  const sz = SIZES[cfg.size];
-  G = {
-    turn:1, cfg, size:cfg.size, goal:cfg.goal, diff:cfg.diff,
-    w:sz.w, h:sz.h, islands:[], log:[], over:false,
-    target: cfg.size==='s'?850 : cfg.size==='m'?1500 : 2300,
-    maxTurn: cfg.size==='s'?60 : cfg.size==='m'?100 : 150,
-    autoPause: true,
-  };
-  G.islands.push(makeIsland(0, cfg.name || 'マイ島', true, sz.w, sz.h));
-  const names = CPUNAMES.slice(); shuffle(names);
-  for(let i=0;i<cfg.cpu;i++) G.islands.push(makeIsland(i+1, names[i]||('CPU'+(i+1)), false, sz.w, sz.h));
-  sel=null; viewIsl = G.islands.length>1?1:0;
-  pushLog('info', `開拓開始！ 目標：${goalText()}`);
-  pushLog('info', `ライバル島：${G.islands.slice(1).map(i=>i.name).join('、')||'なし'}`);
+  srand((Date.now()^(Math.random()*1e9))>>>0);
+  const sz=SIZES[cfg.size];
+  G={ turn:1, cfg, size:cfg.size, goal:cfg.goal, diff:cfg.diff, w:sz.w, h:sz.h,
+      islands:[], log:[], over:false, autoPause:true, _resume:0,
+      target: cfg.size==='s'?2200 : cfg.size==='m'?4500 : 6300,
+      maxTurn: cfg.size==='s'?70 : cfg.size==='m'?110 : 160 };
+  G.islands.push(makeIsland(0,cfg.name||'マイ島',true,sz.w,sz.h));
+  const names=shuffle(CPUNAMES.slice());
+  const baseLv=(cfg.ailv==='auto'||!cfg.ailv)?DIFF2AI[cfg.diff]:cfg.ailv;
+  const bi=AI_ORDER.indexOf(baseLv);
+  for(let i=0;i<cfg.cpu;i++){
+    const li=cfg.aivary?Math.max(0,Math.min(2,bi+ri(-1,1))):bi;
+    G.islands.push(makeIsland(i+1,names[i]||('CPU'+(i+1)),false,sz.w,sz.h,AI_ORDER[li]));
+  }
+  sel=null; viewIsl=G.islands.length>1?1:0;
+  pushLog('info',`開拓開始！ 目標：${goalText()}`);
+  pushLog('info',`CPUの強さ：${AI[baseLv].n}${cfg.aivary?'（島ごとにばらつきあり）':''}`);
+  pushLog('info',`ライバル島：${G.islands.slice(1).map(i=>`${i.name}[${aiOf(i).tag}]`).join('、')||'なし'}`);
 }
 function goalText(){
-  if(G.goal==='score') return `スコア ${G.target} を先に達成`;
-  if(G.goal==='turn')  return `${G.maxTurn}ターン終了時のスコア1位`;
-  if(G.goal==='endl')  return `エンドレス（勝敗なし）`;
-  return '制霸';
+  if(G.goal==='pop')  return `人口 ${fmt(popPeople(G.target))}人 に先に到達`;
+  if(G.goal==='turn') return `${G.maxTurn}ターン終了時の人口1位`;
+  if(G.goal==='endl') return 'エンドレス（勝敗なし）';
+  return '制覇';
 }
 function nextTurn(){
-  if(!G || G.over && G.goal!=='endl') return;
-  const logs = [];
-  const me = G.islands[0];
-  stepIsland(me, G, logs);
-  for(let i=1;i<G.islands.length;i++){
-    const is=G.islands[i];
-    cpuTurn(is, G, logs);
-    stepIsland(is, G, logs);
-  }
+  if(!G || (G.over && G.goal!=='endl')) return;
+  const logs=[];
+  stepIsland(G.islands[0],G,logs);
+  for(let i=1;i<G.islands.length;i++){ cpuTurn(G.islands[i],G,logs); stepIsland(G.islands[i],G,logs); }
   G.turn++;
-  // ログ反映
-  const majors = [];
+  const majors=[];
   for(const l of logs){
-    pushLog(l.k, (l.is.isPlayer?'':`【${l.is.name}】`) + l.s, !l.is.isPlayer);
-    if(l.is.isPlayer && l.major) majors.push(l);
+    pushLog(l.k,(l.is.isPlayer?'':`【${l.is.name}】`)+l.s,!l.is.isPlayer);
+    if(l.is.isPlayer&&l.major) majors.push(l);
   }
-  checkEnd();
-  render();
-  if(majors.length && G.autoPause!==false){ showEvent(majors[0]); }
+  // 怪獣が自分のいるマスに来たら選択を外す
+  if(sel && monsterAt(G.islands[0],sel.x,sel.y)) sel=null;
+  checkEnd(); render(); autosave();
+  if(majors.length && G.autoPause!==false) showEvent(majors[0]);
   else if(majors.length) toast(`${majors[0].icon||'⚠️'} ${majors[0].title}`);
 }
 function checkEnd(){
   if(G.over) return;
-  const rank = [...G.islands].sort((a,b)=>b.score-a.score);
-  if(G.goal==='score'){
-    const win = rank.find(i=>i.score>=G.target);
-    if(win){ endGame(win); }
+  const rank=[...G.islands].sort((a,b)=>b.pop-a.pop);
+  if(G.goal==='pop'){
+    const win=rank.find(i=>i.pop>=G.target);
+    if(win) endGame(win);
+    else if(G.turn>G.maxTurn*2) endGame(rank[0]);
   } else if(G.goal==='turn'){
-    if(G.turn > G.maxTurn){ endGame(rank[0]); }
+    if(G.turn>G.maxTurn) endGame(rank[0]);
   }
 }
 function endGame(win){
-  G.over = true; setSpeed(0);
-  const me = G.islands[0];
-  const rank = [...G.islands].sort((a,b)=>b.score-a.score);
-  const pos = rank.indexOf(me)+1;
-  const wonByMe = win===me;
-  $('#endIcon').textContent = wonByMe?'🏆':'🎌';
-  $('#endTitle').textContent = wonByMe? 'あなたの島が1位です！' : `${win.name} が勝利しました`;
+  G.over=true; setSpeed(0); G._resume=0;
+  const me=G.islands[0], rank=[...G.islands].sort((a,b)=>b.pop-a.pop), pos=rank.indexOf(me)+1;
+  $('#endIcon').textContent = win===me?'🏆':'🎌';
+  $('#endTitle').textContent = win===me?'あなたの島が1位です！':`${win.name} が勝利しました`;
   $('#endBody').innerHTML =
-    `<p style="font-size:13px;color:#cbd8e8">${G.turn-1}ターン終了時点</p>` +
-    `<div style="margin:8px 0">${rankTable(true)}</div>` +
-    `<p style="font-size:13px">あなたは <b style="font-size:18px;color:var(--gold)">${pos}位</b> / ${G.islands.length}島　スコア <b>${me.score.toLocaleString()}</b></p>`;
+    `<p style="font-size:13px;color:#cbd8e8">${G.turn-1}ターン終了時点</p><div style="margin:8px 0">${rankTable()}</div>`+
+    `<p style="font-size:13px">あなたは <b style="font-size:18px;color:var(--gold)">${pos}位</b> / ${G.islands.length}島　人口 <b>${fmt(popPeople(me.pop))}人</b></p>`;
   $('#mEnd').classList.remove('hide');
 }
 
@@ -796,292 +872,325 @@ function endGame(win){
    プレイヤー操作
    ========================================================= */
 function doCmd(id){
-  if(!sel) return;
-  const me = G.islands[0];
-  const cmd = CMD.find(c=>c.id===id);
-  const t = me.map[sel.y][sel.x];
-  if(!cmd.ok(t,G,me,sel.x,sel.y)) return toast('ここには実行できません');
-  const cost=costOf(cmd,me,t), ap=apOf(cmd,me,t);
-  if(me.money < cost) return toast(`資金が足りません（${cost}必要）`);
-  if(me.ap < ap) return toast('行動力（AP）が足りません。ターンを終了しましょう');
-  me.money -= cost; me.ap -= ap;
-  const msg = cmd.run(G, me, sel.x, sel.y, t);
-  recalc(me);
-  pushLog('info', msg);
-  render();
+  const me=G.islands[0], cmd=CMD.find(c=>c.id===id);
+  if(!cmd) return;
+  if(cmd.target!=='island' && !sel) return toast('マスを選んでください');
+  if(cmd.target!=='island' && monsterAt(me,sel.x,sel.y)) return toast('怪獣がいるマスには手を出せません');
+  const t = cmd.target==='island' ? {t:'plain',lv:0} : me.map[sel.y][sel.x];
+  const x = sel?sel.x:0, y = sel?sel.y:0;
+  if(!cmd.ok(t,G,me,x,y)) return toast('ここには実行できません');
+  if(me.money<cmd.cost) return toast(`資金が足りません（${cmd.cost}億円必要）`);
+  if(cmd.food && me.food<cmd.food) return toast(`食料が足りません（${cmd.food}必要）`);
+  if(me.ap<cmd.ap) return toast('行動力（AP）が足りません。ターンを終了しましょう');
+  me.money-=cmd.cost; me.ap-=cmd.ap;
+  const msg=cmd.run(G,me,x,y,t);
+  if(me.money>CAP_MONEY) me.money=CAP_MONEY;
+  estimate(me); pushLog('info',msg); render(); autosave();
 }
 function sendJSDF(){
-  const me = G.islands[0];
-  if(!me.monster) return;
-  const cost = 900;
-  if(me.money<cost) return toast('資金が足りません（900必要）');
-  me.money -= cost;
-  if(rnd()<0.7){ pushLog('good', `自衛隊が怪獣「${me.monster.name}」を撃退しました！`); me.monster=null; }
-  else { me.monster.hp--; pushLog('warn','自衛隊の攻撃は効かなかった…怪獣はまだ暴れています'); }
-  render();
+  const me=G.islands[0]; if(!me.monster) return;
+  if(me.money<900) return toast('資金が足りません（900億円必要）');
+  me.money-=900;
+  if(rnd()<0.7){ pushLog('good',`自衛隊が怪獣「${me.monster.name}」を撃退しました！`); me.monster=null; }
+  else pushLog('warn','自衛隊の攻撃は通用しなかった…怪獣はまだ暴れています');
+  render(); autosave();
 }
 
 /* =========================================================
    描画
    ========================================================= */
-const $ = s=>document.querySelector(s);
-const $$ = s=>[...document.querySelectorAll(s)];
-let flashes = [];
-function flash(is,c){ if(is && is.isPlayer) flashes.push(`${c.x},${c.y}`); }
-
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+function flash(is,c){ if(is&&is.isPlayer) flashes.push(c.x+','+c.y); }
 function fmt(n){ return Math.round(n).toLocaleString('ja-JP'); }
+
+function drawMap(el,is,interactive){
+  const n=is.w, m=is.h;
+  const cw=100/(n+0.5);                       // セル幅（%）
+  const ratio=1.1547*(1+0.75*(m-1))/(n+0.5);  // コンテナの高さ/幅
+  const chP=100/(1+0.75*(m-1));               // セル高さ（コンテナ高さに対する%）
+  el.style.paddingBottom=(ratio*100)+'%';
+  const fs = interactive ? `clamp(9px, ${cw*0.62}vw, 21px)` : `clamp(7px, ${cw*0.40}vw, 14px)`;
+  let html='';
+  for(let y=0;y<m;y++) for(let x=0;x<n;x++){
+    const t=is.map[y][x];
+    const cls = T[t.t].land ? (t.t==='plain'?'plain':(t.t==='waste'?'waste':'land')) : (t.t==='shoal'?'shoal':'sea');
+    const isSel = interactive && sel && sel.x===x && sel.y===y;
+    const mon = monsterAt(is,x,y);
+    const fl = interactive && flashes.includes(x+','+y);
+    const left=(x+(y&1)*0.5)*cw, top=y*0.75*chP;
+    const badge = (!mon && ['farm','factory','town','mountain'].includes(t.t) && t.lv>0)
+      ? `<span class="lv" style="font-size:${interactive?'9px':'7px'}">${t.lv}</span>` : '';
+    html += `<div class="hex ${cls} ${isSel?'sel':''} ${fl?'hit':''}" style="left:${left}%;top:${top}%;width:${cw}%;height:${chP}%;font-size:${fs}"`
+          + (interactive?` data-x="${x}" data-y="${y}"`:'') + `>${mon?'👾':tileIcon(t)}${badge}</div>`;
+  }
+  el.innerHTML=html;
+  if(interactive) flashes=[];
+}
 function render(){
   if(!G) return;
-  const me = G.islands[0];
-  // ステータス
-  const prod=foodProduction(me), need=foodNeed(me), inc=moneyIncome(me);
-  const rank=[...G.islands].sort((a,b)=>b.score-a.score);
-  $('#stats').innerHTML = [
-    ['ターン', G.goal==='turn'? `${G.turn}/${G.maxTurn}` : G.turn, G.over?'終了':''],
-    ['資金', fmt(me.money), (inc>=0?'+':'')+fmt(inc)+'/T'],
-    ['食料', fmt(me.food), `${(prod-need>=0?'+':'')+fmt(prod-need)}/T　限${fmt(foodCap(me))}`],
-    ['人口', fmt(me.pop), me.land+'マス'],
-    ['スコア', fmt(me.score), G.goal==='score'?`目標${fmt(G.target)}`:`${rank.indexOf(me)+1}位`],
+  const me=G.islands[0], li=laborInfo(me);
+  const rank=[...G.islands].sort((a,b)=>b.pop-a.pop);
+  const fb=me.lastFood, mb=me.lastMoney;
+  $('#stats').innerHTML=[
+    ['ターン', G.goal==='turn'?`${G.turn}/${G.maxTurn}`:G.turn, G.over?'終了':''],
+    ['資金', fmt(me.money), `${mb>=0?'+':''}${fmt(mb)}/T`],
+    ['食料', fmt(me.food), `${fb>=0?'+':''}${fmt(fb)}/T`],
+    ['人口', fmt(popPeople(me.pop)), `${me.area}マス`],
+    ['順位', `${rank.indexOf(me)+1}位`, G.goal==='pop'?`目標${fmt(popPeople(G.target))}人`:`/${G.islands.length}島`],
     ['行動力', me.ap+'/5', 'AP'],
   ].map(([k,v,d])=>{
     let cls='';
-    if(k==='食料' && prod-need<0) cls='dn';
-    if(k==='資金' && inc<0) cls='dn';
+    if(k==='食料'&&fb<0) cls='dn';
+    if(k==='資金'&&mb<=0) cls='dn';
     return `<div class="stat"><div class="k">${k}</div><div class="v ${cls}">${v}</div><div class="d">${d||''}</div></div>`;
   }).join('');
-
-  drawMap($('#map'), me, true);
-  drawTileInfo();
-  drawCmds();
-  drawRank();
-  drawIslView();
-  $$('#spd button').forEach(b=> b.classList.toggle('on', +b.dataset.s===speed));
+  drawMap($('#map'),me,true);
+  drawTileInfo(li); drawCmds(); drawRank(); drawIslView();
+  $$('#spd button').forEach(b=>b.classList.toggle('on',+b.dataset.s===speed));
   $('#btnTurn').disabled = G.over && G.goal!=='endl';
 }
-function drawMap(el, is, interactive){
-  el.style.gridTemplateColumns = `repeat(${is.w},1fr)`;
-  let html='';
-  for(let y=0;y<is.h;y++) for(let x=0;x<is.w;x++){
-    const t=is.map[y][x];
-    const info=T[t.t];
-    const isSel = interactive && sel && sel.x===x && sel.y===y;
-    const mon = is.monster && is.monster.x===x && is.monster.y===y;
-    const fl = flashes.includes(`${x},${y}`) && interactive;
-    const cls = info.land ? (t.t==='plain'?'land plain':(t.t==='waste'?'land waste':'land'))
-                          : (t.t==='shoal'?'shoal':'sea');
-    html += `<div class="cell ${cls} ${isSel?'sel':''} ${fl?'hit':''}"
-      ${interactive?`data-x="${x}" data-y="${y}"`:''}>${mon?'👾':info.i}` +
-      `${t.lv>0 && ['farm','factory','town','city'].includes(t.t)?`<span class="lv">${t.lv}</span>`:''}</div>`;
-  }
-  el.innerHTML = html;
-  if(interactive) flashes = [];
+function laborLine(me,li){
+  return `<div class="s">労働力 ${fmt(popPeople(me.pop))}人 ─ 農業へ ${fmt(popPeople(li.need))}人／余り ${fmt(popPeople(li.spare))}人`
+    + (li.spare<=0 ? '　<b style="color:var(--bad)">農業に人手を取られ、資金収入がゼロです</b>'
+      : li.idle>0 ? `　<b style="color:var(--warn)">働き口が足りず ${li.idle}億円ぶんの人手が遊んでいます（工場・採掘場を増やす）</b>`
+      : `　工業収入 ${li.moneyGain}億円（受け皿 ${li.cap}）`) + '</div>';
 }
-function drawTileInfo(){
-  const me=G.islands[0];
-  const box=$('#tileinfo');
-  if(me.monster && (!sel || (sel.x!==me.monster.x||sel.y!==me.monster.y))){
-    // 怪獣警告を常時出す
+function drawTileInfo(li){
+  const me=G.islands[0], box=$('#tileinfo');
+  const labor=laborLine(me,li);
+  if(!sel){ box.innerHTML=`<div><div class="t" style="font-size:12.5px">マスをタップすると、使えるコマンドが出ます</div>${labor}</div>`; return; }
+  if(monsterAt(me,sel.x,sel.y)){
+    box.innerHTML=`<span class="big">👾</span><div><div class="t">怪獣「${me.monster.name}」　<span class="s">(${sel.x}, ${sel.y})</span></div>`
+      +`<div class="s">このマスには手を出せません。自衛隊で撃退するか、海へ帰るのを待ちましょう（残り約${me.monster.life}ターン）</div>${labor}</div>`;
+    return;
   }
-  if(!sel){
-    box.innerHTML = `<span class="s">マスをタップして開発コマンドを選びます</span>`;
-  } else {
-    const t=me.map[sel.y][sel.x];
-    const extra = [];
-    if(['farm','factory','town','city'].includes(t.t)) extra.push(`Lv${t.lv}`);
-    if(t.pop>0) extra.push(`人口 ${fmt(t.pop)}`);
-    if(t.t==='farm') extra.push(`食料 +${Math.round(t.lv*58)}`);
-    if(t.t==='factory') extra.push(`資金 +${t.lv*46}`);
-    if(isCoast(me,sel.x,sel.y) && T[t.t].land) extra.push('沿岸');
-    box.innerHTML = `<span class="big">${T[t.t].i}</span><div><div class="t">${T[t.t].n}　<span class="s">(${sel.x+1}, ${sel.y+1})</span></div><div class="s">${extra.join('　/　')||'－'}</div></div>`;
+  const t=me.map[sel.y][sel.x], ex=[];
+  if(t.t==='town') ex.push(`人口 ${fmt(popPeople(t.lv))}人`);
+  if(t.t==='farm') ex.push(`規模 ${t.lv}（労働力 ${fmt(popPeople(t.lv*10))}人 を要求）`);
+  if(t.t==='factory') ex.push(`規模 ${t.lv}`);
+  if(t.t==='mountain') ex.push(t.lv>0?`採掘規模 ${t.lv}`:'未開発の山');
+  if(t.t==='forest') ex.push(`樹齢 ${t.lv}（伐採で ${t.lv*5}億円）`);
+  if(t.t==='sea' && adjLand(me,sel.x,sel.y)===0) ex.push('陸から離れているため埋め立てできません');
+  if(T[t.t].land){
+    const s=adjSea(me,sel.x,sel.y), f=adjForest(me,sel.x,sel.y);
+    ex.push(`隣接 海${s} 森${f}`);
+    if(['town','farm','factory'].includes(t.t)){
+      if(s>=2) ex.push(`<b style="color:var(--bad)">津波に弱い</b>`);
+      if(f===0&&(t.t==='factory'||(t.t==='town'&&t.lv>30))) ex.push(`<b style="color:var(--bad)">火災の危険</b>`);
+      if(t.t==='farm'&&f>=3) ex.push(`<b style="color:var(--ok)">防風林あり</b>`);
+    }
   }
-  // 怪獣ボタン
+  box.innerHTML=`<span class="big">${tileIcon(t)||'　'}</span><div><div class="t">${tileName(t)}　<span class="s">(${sel.x}, ${sel.y})</span></div>`
+    + `<div class="s">${ex.join('　/　')||'－'}</div>${labor}</div>`;
+}
+function cmdBtn(id,name,costTxt,desc,disabled,extra){
+  return `<button class="cmd ${extra||''}" data-cmd="${id}" ${disabled?'disabled':''}>
+    <div class="n">${name}<small>${costTxt}</small></div><div class="c">${desc}</div></button>`;
 }
 function drawCmds(){
   const me=G.islands[0];
-  const c=$('#cmds');
   let html='';
-  if(me.monster){
-    html += `<button class="cmd danger" id="cmdJSDF"><div class="n">🚁 自衛隊出動</div><div class="c">900　怪獣を撃退(70%)</div></button>`;
+  // --- 選んだマスで使えるコマンドだけを出す ---
+  if(sel && !monsterAt(me,sel.x,sel.y)){
+    const t=me.map[sel.y][sel.x];
+    let tileHtml='';
+    for(const cmd of CMD){
+      if(cmd.target==='island') continue;
+      if(!cmd.ok(t,G,me,sel.x,sel.y)) continue;
+      const lack = me.money<cmd.cost ? '資金不足' : (me.ap<cmd.ap ? 'AP不足' : '');
+      tileHtml += cmdBtn(cmd.id, cmd.n, `💰${cmd.cost}`, lack?`<b style="color:var(--bad)">${lack}</b>　${cmd.desc}`:cmd.desc, !!lack);
+    }
+    html += tileHtml ? `<div class="cmds">${tileHtml}</div>` : `<div class="empty">このマスでできることはありません</div>`;
   }
+  // --- 島全体のコマンド（マス選択不要） ---
+  let isl='';
+  if(me.monster) isl += cmdBtn('__jsdf','🚁 自衛隊', '💰900', me.money<900?'<b style="color:var(--bad)">資金不足</b>':'怪獣を撃退（70%）', me.money<900||!me.monster, 'danger');
   for(const cmd of CMD){
-    let ok = !!sel, t = sel ? me.map[sel.y][sel.x] : null;
-    if(sel) ok = cmd.ok(t,G,me,sel.x,sel.y);
-    const cost=costOf(cmd,me,t), ap=apOf(cmd,me,t);
-    const afford = me.money>=cost && me.ap>=ap;
-    html += `<button class="cmd" data-cmd="${cmd.id}" ${(!ok||!afford)?'disabled':''}>
-      <div class="n">${cmd.n}</div><div class="c">💰${cost} / AP${ap}<br>${cmd.desc}</div></button>`;
+    if(cmd.target!=='island') continue;
+    const ok=cmd.ok(null,G,me,0,0);
+    const lack = me.money<cmd.cost ? '資金不足' : (cmd.food&&me.food<cmd.food ? '食料不足' : (me.ap<cmd.ap ? 'AP不足' : ''));
+    isl += cmdBtn(cmd.id, cmd.n, cmd.food?`🌾${cmd.food}`:`💰${cmd.cost}`, lack?`<b style="color:var(--bad)">${lack}</b>`:cmd.desc, !ok||!!lack);
   }
-  c.innerHTML = html;
+  html += `<div class="cmdsub">島全体</div><div class="cmds">${isl}</div>`;
+  $('#cmds').innerHTML=html;
 }
-function rankTable(compact){
-  const rank=[...G.islands].sort((a,b)=>b.score-a.score);
-  const max = Math.max(1, rank[0].score);
-  let h = `<table><tr><th class="nm">島</th><th>スコア</th><th>人口</th><th>資金</th><th>面積</th></tr>`;
+function rankTable(){
+  const rank=[...G.islands].sort((a,b)=>b.pop-a.pop), max=Math.max(1,rank[0].pop);
+  let h=`<table><tr><th class="nm">島</th><th>人口</th><th>資金</th><th>農/工</th><th>面積</th></tr>`;
   rank.forEach((is,i)=>{
-    h += `<tr class="${is.isPlayer?'me':''} ${is.alive?'':'dead'}">
-      <td class="nm">${i+1}. ${is.isPlayer?'★':''}${is.name}${is.monster?' 👾':''}
-        <div class="bar" style="width:${Math.round(is.score/max*100)}%"></div></td>
-      <td>${fmt(is.score)}</td><td>${fmt(is.pop)}</td><td>${fmt(is.money)}</td><td>${is.land}</td></tr>`;
+    const b=is.isPlayer?'':`<b style="color:${aiOf(is).col};font-size:10px;border:1px solid ${aiOf(is).col};border-radius:3px;padding:0 3px;margin-right:3px">${aiOf(is).tag}</b>`;
+    h+=`<tr class="${is.isPlayer?'me':''} ${is.alive?'':'dead'}">
+      <td class="nm">${i+1}. ${b}${is.isPlayer?'★':''}${is.name}${is.monster?' 👾':''}
+        <div class="bar" style="width:${Math.round(is.pop/max*100)}%"></div></td>
+      <td>${fmt(popPeople(is.pop))}</td><td>${fmt(is.money)}</td><td>${is.farm}/${is.factory+is.mine}</td><td>${is.area}</td></tr>`;
   });
-  return h+`</table>`;
+  return h+'</table>';
 }
-function drawRank(){ $('#rank').innerHTML = rankTable(); }
+function drawRank(){ $('#rank').innerHTML=rankTable(); }
 function drawIslView(){
-  const sels=$('#islSel');
-  sels.innerHTML = G.islands.map((is,i)=>
-    `<button class="opt ${i===viewIsl?'on':''}" data-isl="${i}">${is.isPlayer?'★':''}${is.name}</button>`).join('');
-  const is=G.islands[viewIsl];
-  if(is){
-    drawMap($('#map2'), is, false);
-    $('#islInfo').innerHTML = `スコア <b>${fmt(is.score)}</b>　人口 ${fmt(is.pop)}　資金 ${fmt(is.money)}　食料 ${fmt(is.food)}　面積 ${is.land}` +
-      (is.isPlayer?'':`<br>方針：${({balanced:'バランス型',industry:'工業重視',agri:'農業重視',expand:'拡張重視'})[is.policy]}`) +
-      (is.monster?`<br><span style="color:var(--bad)">👾 怪獣「${is.monster.name}」が暴れています</span>`:'');
-  }
+  $('#islSel').innerHTML=G.islands.map((is,i)=>`<button class="opt ${i===viewIsl?'on':''}" data-isl="${i}">${is.isPlayer?'★':''}${is.name}</button>`).join('');
+  const is=G.islands[viewIsl]; if(!is) return;
+  drawMap($('#map2'),is,false);
+  const li=laborInfo(is);
+  $('#islInfo').innerHTML=`人口 <b>${fmt(popPeople(is.pop))}人</b>　資金 ${fmt(is.money)}　食料 ${fmt(is.food)}　面積 ${is.area}<br>`
+    + `農場 ${is.farm}（要 ${fmt(popPeople(li.need))}人）／工場・採掘 ${li.cap}　余剰労働 ${fmt(popPeople(li.spare))}人`
+    + (is.isPlayer?'':`<br>強さ：<b style="color:${aiOf(is).col}">${aiOf(is).n}</b>（行動力${aiOf(is).ap}）　方針：${({balanced:'バランス型',industry:'工業重視',agri:'農業重視',expand:'拡張重視'})[is.policy]}`)
+    + (is.monster?`<br><span style="color:var(--bad)">👾 怪獣「${is.monster.name}」が暴れています</span>`:'');
 }
-function pushLog(k, s, cpu){
-  G.log.unshift({t:G.turn, k, s, cpu});
-  if(G.log.length>200) G.log.pop();
-  const el=$('#log');
-  if(el) el.innerHTML = G.log.map(l=>`<div class="le ${l.k} ${l.cpu?'cpu':''}"><span class="t">T${l.t}</span>${l.s}</div>`).join('');
-}
-function toast(m){
-  const t=$('#toast'); t.textContent=m; t.classList.add('on');
-  clearTimeout(t._x); t._x=setTimeout(()=>t.classList.remove('on'),1600);
-}
+function logHTML(){ return G.log.map(l=>`<div class="le ${l.k} ${l.cpu?'cpu':''}"><span class="t">T${l.t}</span>${l.s}</div>`).join(''); }
+function pushLog(k,s,cpu){ G.log.unshift({t:G.turn,k,s,cpu}); if(G.log.length>200) G.log.pop();
+  const el=$('#log'); if(el) el.innerHTML=logHTML(); }
+function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.add('on');
+  clearTimeout(t._x); t._x=setTimeout(()=>t.classList.remove('on'),1700); }
 function showEvent(l){
-  $('#evIcon').textContent = l.icon||'⚠️';
-  $('#evTitle').textContent = l.title||'イベント';
-  $('#evBody').textContent = l.s;
-  const act=$('#evAct');
+  $('#evIcon').textContent=l.icon||'⚠️'; $('#evTitle').textContent=l.title||'災害';
+  $('#evBody').textContent=l.s;
   const me=G.islands[0];
-  if(me.monster){
-    act.innerHTML = `<div class="rowbtn"><button class="btn danger" id="evJSDF" style="border-color:#6b3230">🚁 自衛隊を出動（900）</button></div>`;
-    $('#evJSDF').onclick = ()=>{ sendJSDF(); $('#mEvent').classList.add('hide'); };
-  } else act.innerHTML='';
+  $('#evAct').innerHTML = me.monster?`<div class="rowbtn"><button class="btn" id="evJSDF" style="border-color:#6b3230">🚁 自衛隊を出動（900億円）</button></div>`:'';
+  if(me.monster) $('#evJSDF').onclick=()=>{ sendJSDF(); $('#mEvent').classList.add('hide'); resumeTime(); };
   $('#mEvent').classList.remove('hide');
-  if(speed>0){ G._resume=speed; setSpeed(0); }
+  pauseTime();
 }
 
-/* =========================================================
-   時間（ハイブリッド）
-   ========================================================= */
-const BASE_MS = 5000;
-function setSpeed(s){
-  speed = s;
-  if(timer){ clearTimeout(timer); timer=null; }
-  if(s>0) loop();
-  $$('#spd button').forEach(b=> b.classList.toggle('on', +b.dataset.s===speed));
-}
-function loop(){
-  if(speed<=0) return;
-  timer = setTimeout(()=>{
-    if(speed<=0) return;
-    if(!G.over || G.goal==='endl') nextTurn();
-    else { setSpeed(0); return; }
-    loop();
-  }, BASE_MS/speed);
+/* ---------- 時間 ---------- */
+const BASE_MS=5000;
+function setSpeed(s){ speed=s; if(timer){clearTimeout(timer);timer=null;} if(s>0) loop();
+  $$('#spd button').forEach(b=>b.classList.toggle('on',+b.dataset.s===speed)); }
+function loop(){ if(speed<=0) return;
+  timer=setTimeout(()=>{ if(speed<=0) return;
+    if(!G.over||G.goal==='endl') nextTurn(); else { setSpeed(0); return; }
+    loop(); }, BASE_MS/speed); }
+// 画面を覆うもの（メニュー・遊び方・災害通知）を開いている間は時間を止め、閉じたら元の速度に戻す
+function pauseTime(){ if(G && speed>0){ G._resume=speed; setSpeed(0); } }
+function resumeTime(){
+  if(!G || !G._resume) return;
+  if(['#mMenu','#mHelp','#mEvent','#mTitle','#mEnd'].some(s=>!$(s).classList.contains('hide'))) return;
+  const s=G._resume; G._resume=0; setSpeed(s);
 }
 
-/* =========================================================
-   セーブ / ロード
-   ========================================================= */
+/* ---------- オートセーブ ---------- */
+const SAVE_KEY='hakoniwa_rettou_autosave_v2';
+let _storeOK=null;
+function storageOK(){
+  if(_storeOK!==null) return _storeOK;
+  try{ const k='__hk_probe'; localStorage.setItem(k,'1'); localStorage.removeItem(k); _storeOK=true; }
+  catch(e){ _storeOK=false; }
+  return _storeOK;
+}
+function autosave(){
+  if(!G || !storageOK()) return;
+  try{ localStorage.setItem(SAVE_KEY, JSON.stringify({v:2,at:Date.now(),G})); G._savedTurn=G.turn; }
+  catch(e){ _storeOK=false; }
+}
+function readAutosave(){
+  if(!storageOK()) return null;
+  try{
+    const s=localStorage.getItem(SAVE_KEY); if(!s) return null;
+    const d=JSON.parse(s);
+    return (d && d.v===2 && d.G && d.G.islands && d.G.islands[0].map) ? d : null;
+  }catch(e){ return null; }
+}
+function saveStateText(){
+  if(!storageOK()) return '⚠️ この表示環境ではオートセーブが使えません。こまめに「セーブを書き出す」を使ってください。';
+  return `✅ オートセーブ有効（毎ターン自動保存${G&&G._savedTurn?`・最終 T${G._savedTurn}`:''}）`;
+}
+// アプリ切替やタブを閉じる直前にも保存（スマホでの消失対策）
+document.addEventListener('visibilitychange',()=>{ if(document.hidden) autosave(); });
+window.addEventListener('pagehide',autosave);
+
+/* ---------- セーブ（書き出し／読み込み） ---------- */
 function saveGame(){
-  const data = JSON.stringify({v:1, G}, null, 0);
-  const blob = new Blob([data], {type:'application/json'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
+  const blob=new Blob([JSON.stringify({v:2,G})],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
   a.download=`hakoniwa_${G.islands[0].name}_T${G.turn}.json`;
   document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
-  toast('セーブファイルを書き出しました');
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000); toast('セーブファイルを書き出しました');
+}
+function applyLoaded(d){
+  G=d.G; G._resume=0; sel=null; viewIsl=G.islands.length>1?1:0;
+  $('#mTitle').classList.add('hide'); $('#mMenu').classList.add('hide');
+  setSpeed(0); render(); $('#log').innerHTML=logHTML();
 }
 function loadGame(file){
   const fr=new FileReader();
-  fr.onload = ()=>{
-    try{
+  fr.onload=()=>{ try{
       const d=JSON.parse(fr.result);
-      if(!d.G || !d.G.islands) throw 0;
-      G=d.G; sel=null; viewIsl=G.islands.length>1?1:0;
-      $('#mTitle').classList.add('hide'); $('#mMenu').classList.add('hide');
-      setSpeed(0); render();
-      $('#log').innerHTML = G.log.map(l=>`<div class="le ${l.k} ${l.cpu?'cpu':''}"><span class="t">T${l.t}</span>${l.s}</div>`).join('');
-      toast('セーブを読み込みました');
-    }catch(e){ toast('セーブファイルを読み込めませんでした'); }
-  };
+      if(!d.G||!d.G.islands||!d.G.islands[0].map) throw 0;
+      if(d.v!==2) throw 0;
+      applyLoaded(d); autosave(); toast('セーブを読み込みました');
+    }catch(e){ toast('このセーブは読み込めません（旧バージョンの可能性）'); } };
   fr.readAsText(file);
 }
 
-/* =========================================================
-   タイトル画面 UI
-   ========================================================= */
-const cfg = {name:'おだんご島', size:'m', cpu:5, goal:'score', diff:'norm'};
-function buildTitle(){
-  $('#optSize').innerHTML = Object.entries(SIZES).map(([k,v])=>
-    `<button class="opt ${cfg.size===k?'on':''}" data-k="size" data-v="${k}">${v.n}<small>${v.note}</small></button>`).join('');
-  $('#optCpu').innerHTML = [1,3,5,7].map(n=>
-    `<button class="opt ${cfg.cpu===n?'on':''}" data-k="cpu" data-v="${n}">${n}島</button>`).join('');
-  $('#optGoal').innerHTML = Object.entries(GOALS).map(([k,v])=>
-    `<button class="opt ${cfg.goal===k?'on':''}" data-k="goal" data-v="${k}" ${v.locked?'disabled':''}>${v.n}${v.locked?'<small>🔒Ver.2</small>':''}</button>`).join('');
-  $('#optDiff').innerHTML = Object.entries(DIFFS).map(([k,v])=>
-    `<button class="opt ${cfg.diff===k?'on':''}" data-k="diff" data-v="${k}">${v.n}<small>${v.note}</small></button>`).join('');
-  $('#goalNote').textContent = GOALS[cfg.goal].note;
+/* ---------- タイトル ---------- */
+const cfg={name:'おだんご島',size:'m',cpu:5,goal:'pop',diff:'norm',ailv:'auto',aivary:1};
+function refreshContinue(){
+  const d=readAutosave(), box=$('#contBox');
+  if(!d){ box.classList.add('hide'); return; }
+  const me=d.G.islands[0];
+  const when=new Date(d.at||Date.now());
+  const ts=`${when.getMonth()+1}/${when.getDate()} ${String(when.getHours()).padStart(2,'0')}:${String(when.getMinutes()).padStart(2,'0')}`;
+  $('#btnCont').textContent=`▶ 続きから　${me.name}・T${d.G.turn}`;
+  $('#contNote').textContent=`人口 ${fmt(popPeople(me.pop))}人／${SIZES[d.G.size]?SIZES[d.G.size].n:''}マップ／${ts} 保存。新しく始めると、この続きは上書きされます。`;
+  box.classList.remove('hide');
 }
-document.addEventListener('click', e=>{
-  const opt = e.target.closest('.opt[data-k]');
-  if(opt && !opt.disabled){
-    const k=opt.dataset.k; let v=opt.dataset.v;
-    if(k==='cpu') v=+v;
-    cfg[k]=v; buildTitle(); return;
-  }
-  const cell = e.target.closest('.cell[data-x]');
-  if(cell){ sel={x:+cell.dataset.x, y:+cell.dataset.y}; render(); return; }
-  const cmd = e.target.closest('.cmd[data-cmd]');
-  if(cmd && !cmd.disabled){ doCmd(cmd.dataset.cmd); return; }
-  const isl = e.target.closest('.opt[data-isl]');
+function buildTitle(){
+  $('#optSize').innerHTML=Object.entries(SIZES).map(([k,v])=>`<button class="opt ${cfg.size===k?'on':''}" data-k="size" data-v="${k}">${v.n}<small>${v.note}</small></button>`).join('');
+  $('#optCpu').innerHTML=[1,3,5,7].map(n=>`<button class="opt ${cfg.cpu===n?'on':''}" data-k="cpu" data-v="${n}">${n}島</button>`).join('');
+  $('#optGoal').innerHTML=Object.entries(GOALS).map(([k,v])=>`<button class="opt ${cfg.goal===k?'on':''}" data-k="goal" data-v="${k}" ${v.locked?'disabled':''}>${v.n}${v.locked?'<small>🔒Ver.2</small>':''}</button>`).join('');
+  $('#optDiff').innerHTML=Object.entries(DIFFS).map(([k,v])=>`<button class="opt ${cfg.diff===k?'on':''}" data-k="diff" data-v="${k}">${v.n}<small>${v.note}</small></button>`).join('');
+  $('#goalNote').textContent=GOALS[cfg.goal].note;
+  $('#optAi').innerHTML=Object.entries(AI_OPT).map(([k,v])=>`<button class="opt ${cfg.ailv===k?'on':''}" data-k="ailv" data-v="${k}">${k==='auto'?'難易度連動':v.n}</button>`).join('');
+  $('#optVary').innerHTML=[[1,'島ごとにばらつく'],[0,'全島おなじ強さ']].map(([v,n])=>`<button class="opt ${cfg.aivary==v?'on':''}" data-k="aivary" data-v="${v}">${n}</button>`).join('');
+  const lv=cfg.ailv==='auto'?DIFF2AI[cfg.diff]:cfg.ailv, a=AI[lv];
+  $('#aiNote').innerHTML=(cfg.ailv==='auto'?`「${DIFFS[cfg.diff].n}」に連動して <b>${a.n}</b> になります。<br>`:'')
+    +`行動力 ${a.ap}／ターン（あなたは5）　判断ミス ${Math.round(a.mistake*100)}%　経済 ${a.econ.toFixed(2)}倍　開始時 ${a.start.toFixed(2)}倍`
+    +(cfg.aivary==1?'<br>各島はこれを基準に±1段階ばらつきます。':'');
+}
+function showTitle(){ setSpeed(0); if(G) G._resume=0; refreshContinue(); $('#mTitle').classList.remove('hide'); }
+
+document.addEventListener('click',e=>{
+  const opt=e.target.closest('.opt[data-k]');
+  if(opt&&!opt.disabled){ const k=opt.dataset.k; let v=opt.dataset.v;
+    if(k==='cpu'||k==='aivary') v=+v; cfg[k]=v; buildTitle(); return; }
+  const hex=e.target.closest('.hex[data-x]');
+  if(hex){ const x=+hex.dataset.x, y=+hex.dataset.y;
+    sel = (sel && sel.x===x && sel.y===y) ? null : {x,y};   // 同じマスをもう一度タップで選択解除
+    render(); return; }
+  const c=e.target.closest('.cmd[data-cmd]');
+  if(c&&!c.disabled){ if(c.dataset.cmd==='__jsdf') sendJSDF(); else doCmd(c.dataset.cmd); return; }
+  const isl=e.target.closest('.opt[data-isl]');
   if(isl){ viewIsl=+isl.dataset.isl; drawIslView(); return; }
 });
-$('#cmds').addEventListener('click', e=>{
-  if(e.target.closest('#cmdJSDF')) sendJSDF();
-});
-$$('#spd button').forEach(b=> b.onclick = ()=> setSpeed(+b.dataset.s));
-$('#btnTurn').onclick = ()=> { if(!G.over||G.goal==='endl') nextTurn(); };
-$('#btnMenu').onclick = ()=>{ syncPauseBtn(); $('#mMenu').classList.remove('hide'); };
-function syncPauseBtn(){ if(G) $('#btnPause').textContent = `⏸ 大災害で自動停止：${G.autoPause!==false?'ON':'OFF'}`; }
-$('#btnPause').onclick = ()=>{ if(!G) return; G.autoPause = !(G.autoPause!==false); syncPauseBtn(); };
-$('#btnClose').onclick = ()=> $('#mMenu').classList.add('hide');
-$('#btnSave').onclick = saveGame;
-$('#btnLoad').onclick = ()=> $('#fileIn').click();
-$('#btnLoadT').onclick = ()=> $('#fileIn').click();
-$('#fileIn').onchange = e=>{ if(e.target.files[0]) loadGame(e.target.files[0]); e.target.value=''; };
-$('#btnHelp').onclick = ()=> $('#mHelp').classList.remove('hide');
-$('#btnHelpT').onclick = ()=> $('#mHelp').classList.remove('hide');
-$('#helpOk').onclick = ()=> $('#mHelp').classList.add('hide');
-$('#btnTitle').onclick = ()=>{ setSpeed(0); $('#mMenu').classList.add('hide'); $('#mTitle').classList.remove('hide'); };
-$('#evOk').onclick = ()=>{
-  $('#mEvent').classList.add('hide');
-  if(G && G._resume){ const s=G._resume; G._resume=0; setSpeed(s); }
-};
-$('#endCont').onclick = ()=>{ $('#mEnd').classList.add('hide'); G.goal='endl'; render(); toast('エンドレスモードで続行します'); };
-$('#endNew').onclick = ()=>{ $('#mEnd').classList.add('hide'); $('#mTitle').classList.remove('hide'); };
-$('#btnStart').onclick = ()=>{
-  cfg.name = $('#inName').value.trim() || 'マイ島';
-  newGame({...cfg});
-  $('#mTitle').classList.add('hide');
-  setSpeed(0);
-  render();
-};
-$$('.tabs button').forEach(b=> b.onclick = ()=>{
-  $$('.tabs button').forEach(x=>x.classList.toggle('on', x===b));
-  ['log','rank','isl'].forEach(t=> $('#pane-'+t).classList.toggle('hide', t!==b.dataset.tab));
-});
+$$('#spd button').forEach(b=>b.onclick=()=>{ if(G) G._resume=0; setSpeed(+b.dataset.s); });
+$('#btnTurn').onclick=()=>{ if(G&&(!G.over||G.goal==='endl')) nextTurn(); };
+$('#btnMenu').onclick=()=>{ pauseTime(); syncPauseBtn(); $('#saveState').textContent=saveStateText(); $('#mMenu').classList.remove('hide'); };
+function syncPauseBtn(){ if(G) $('#btnPause').textContent=`大災害で自動停止：${G.autoPause!==false?'ON':'OFF'}`; }
+$('#btnPause').onclick=()=>{ if(!G) return; G.autoPause=!(G.autoPause!==false); syncPauseBtn(); autosave(); };
+$('#btnClose').onclick=()=>{ $('#mMenu').classList.add('hide'); resumeTime(); };
+$('#btnSave').onclick=saveGame;
+$('#btnLoad').onclick=()=>$('#fileIn').click();
+$('#btnLoadT').onclick=()=>$('#fileIn').click();
+$('#fileIn').onchange=e=>{ if(e.target.files[0]) loadGame(e.target.files[0]); e.target.value=''; };
+const openHelp=()=>{ pauseTime(); $('#mHelp').classList.remove('hide'); };
+$('#btnHelp').onclick=openHelp;
+$('#btnHelpT').onclick=openHelp;
+$('#helpOk').onclick=()=>{ $('#mHelp').classList.add('hide'); resumeTime(); };
+$('#btnTitle').onclick=()=>{ autosave(); $('#mMenu').classList.add('hide'); showTitle(); };
+$('#evOk').onclick=()=>{ $('#mEvent').classList.add('hide'); resumeTime(); };
+$('#endCont').onclick=()=>{ $('#mEnd').classList.add('hide'); G.goal='endl'; render(); autosave(); toast('エンドレスモードで続行します'); };
+$('#endNew').onclick=()=>{ $('#mEnd').classList.add('hide'); showTitle(); };
+$('#btnCont').onclick=()=>{ const d=readAutosave(); if(!d) return toast('続きのデータが見つかりません');
+  applyLoaded(d); toast(`T${G.turn} から再開しました`); };
+$('#btnStart').onclick=()=>{ cfg.name=$('#inName').value.trim()||'マイ島'; newGame({...cfg});
+  $('#mTitle').classList.add('hide'); setSpeed(0); render(); autosave(); };
+$$('.tabs button').forEach(b=>b.onclick=()=>{ $$('.tabs button').forEach(x=>x.classList.toggle('on',x===b));
+  ['log','rank','isl'].forEach(t=>$('#pane-'+t).classList.toggle('hide',t!==b.dataset.tab)); });
 
-/* 凡例 */
-const SW = (c)=>`<i style="display:inline-block;width:11px;height:11px;border-radius:2px;background:${c};vertical-align:-1px;margin-right:2px"></i>`;
-$('#legend').innerHTML = SW('#0f3554')+'海 '+SW('#1c5c86')+'浅瀬 '+SW('#4a7a3f')+'平地 '+SW('#6d5c3c')+'荒地 ' +
-  ['forest','farm','factory','town','city','mount','levee','crater']
-  .map(k=>`<span>${T[k].i}${T[k].n}</span>`).join('') + '<span>👾怪獣</span>';
-
-buildTitle();
+const SW=c=>`<i style="display:inline-block;width:11px;height:11px;border-radius:2px;background:${c};vertical-align:-1px;margin-right:2px"></i>`;
+$('#legend').innerHTML=SW('#0f3554')+'海 '+SW('#1c5c86')+'浅瀬 '+SW('#4a7a3f')+'平地 '+SW('#6d5c3c')+'荒地 '
+  +'<span>🏠村</span><span>🏘️町</span><span>🏙️都市</span><span>🌾農場</span><span>🏭工場</span><span>🌲森</span><span>⛰️山</span><span>⛏️採掘場</span><span>👾怪獣</span>';
+buildTitle(); refreshContinue();
 </script>
 </body>
 </html>
